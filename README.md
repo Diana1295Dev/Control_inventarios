@@ -10,7 +10,7 @@ Para la presentación del proyecto ante evaluadores, el equipo se divide estruct
 
 | 👤 Integrante | 🛠️ Especialidad & Rol | 📋 Temas de Exposición |
 | :--- | :--- | :--- |
-| **Integrante 1** | Líder de Proyecto & Diseñador UX/UI | Introducción del problema logístico, propuesta de valor de negocio, estética Glassmorphic en Modo Oscuro y simulación interactiva de sensores IoT en el frontend. |
+| **Integrante 1** | Líder de Proyecto & Diseñador UX/UI | Introducción del problema logístico, propuesta de valor de negocio, estética Glassmorphic corporativa de alto contraste y baja fatiga visual y simulación interactiva de sensores IoT en el frontend. |
 | **Integrante 2** | Arquitecto de Software & Backend | Backend en Flask (Python), Gateway API/REST IoT, conector nativo con Google BigQuery y arquitectura de persistencia con doble ruta de respaldo (Streaming + Fallback SQL). |
 | **Integrante 3** | Analista de Datos & Especialista en BI | Dashboards interactivos en Chart.js, análisis estadístico dual (Descriptivo e Inferencial) de las 4 métricas clave e interactividad avanzada Drill-down (clic en barras para abrir detalles). |
 | **Integrante 4** | Ingeniero de DevOps & Cloud Computing | Flujo de control de versiones limpio en Git, contenedorización con Docker, despliegue serverless en Google Cloud Run y seguridad de credenciales IAM de Google Cloud. |
@@ -80,7 +80,7 @@ Aquí te explicamos de manera muy sencilla y humana cómo leer cada uno de ellos
 ## 🛠️ Stack Tecnológico
 
 * **Backend**: Flask (Python 3.11), SDK de Google Cloud BigQuery, Pandas (para modelado analítico).
-* **Frontend**: HTML5, Vanilla CSS3 (estilo premium Glassmorphic optimizado para modo oscuro), JavaScript (ES6+), y **Chart.js** para visualización analítica interactiva de gráficos.
+* **Frontend**: HTML5, Vanilla CSS3 (estilo premium Glassmorphic optimizado para diseño ergonómico de alto contraste), JavaScript (ES6+), y **Chart.js** para visualización analítica interactiva de gráficos.
 * **Infraestructura**: Contenedorizado con **Docker**, optimizado para ejecutarse en **Google Cloud Run** y escalar a cero.
 * **Base de Datos**: **Google BigQuery** (almacenamiento analítico de alto rendimiento a escala de Petabytes).
 
@@ -289,7 +289,7 @@ Este guión interactivo está diseñado para que **4 integrantes** puedan presen
 
 > *"Buenos días a todos. Hoy presentaremos nuestro **Dashboard Inteligente de Control de Inventarios para Constructoras**, una plataforma diseñada para resolver un problema crítico en la industria: **el quiebre de stock de materiales en frentes de obra**, el cual paraliza maquinarias, causa sobrecostos y demora los proyectos civiles.*
 >
-> *Mi rol se centró en la dirección del proyecto y el diseño de la interfaz de usuario (UX/UI). Decidimos alejarnos de los diseños tradicionales y genéricos para implementar una estética **Glassmorphic en Modo Oscuro** de alta gama. Esto se logra mediante fondos translúcidos, filtros de desenfoque (`backdrop-filter: blur`), gradientes sutiles (tonalidades HSL personalizadas en azules y cianes) y micro-animaciones en los componentes.*
+> *Mi rol se centró en la dirección del proyecto y el diseño de la interfaz de usuario (UX/UI). Decidimos alejarnos de los diseños tradicionales y genéricos para implementar una estética **Glassmorphism corporativo de alto contraste** de alta gama. Esto se logra mediante fondos translúcidos, filtros de desenfoque (`backdrop-filter: blur`), gradientes sutiles (tonalidades HSL personalizadas en azules y cianes) y micro-animaciones en los componentes.*
 >
 > **Características clave que diseñamos para la interacción:**
 > 1. **Encabezado Inteligente:** Muestra el logo dinámico y un indicador de estado que verifica síncronamente si la base de datos distribuida en Google BigQuery está conectada.
