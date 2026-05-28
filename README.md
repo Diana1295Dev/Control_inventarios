@@ -21,6 +21,28 @@ Este dashboard no es solo un registrador de transacciones; actúa como un **Asis
 
 ---
 
+## 📈 Análisis Estadístico Avanzado: Enfoque Descriptivo e Inferencial
+
+Para dotar al dashboard de un rigor científico y académico de primer nivel, cada una de las 4 visualizaciones de la plataforma ha sido diseñada bajo un enfoque dual: **Estadística Descriptiva** (para comprender el estado histórico e inmediato) y **Estadística Inferencial** (para deducir riesgos, comportamientos futuros y apoyar la toma de decisiones estocásticas).
+
+### 1. Gráfico de Salud del Inventario (Dona)
+*   **Enfoque Descriptivo:** Categoriza transversalmente el estado de disponibilidad del stock en tres niveles discretos excluyentes: *Crítico (Quiebre)*, *En Riesgo (Bajo el Mínimo)* y *Saludable (Disponible)*. Describe cuantitativamente la distribución de frecuencias relativas (porcentajes %) y las frecuencias absolutas en tiempo real, respondiendo de inmediato a la pregunta: *"¿Cómo está distribuido nuestro almacén hoy?"*
+*   **Enfoque Inferencial:** Permite inferir la **Probabilidad de Quiebre de Stock General ($P(\text{Quiebre})$)** en la cadena de suministro. Si la proporción acumulada de ítems en estado *Crítico* o *En Riesgo* excede el umbral de significancia del $10\%$, se infiere estadísticamente que existe una alta inestabilidad en los tiempos de entrega de los proveedores (Lead Times) o una alta variabilidad de consumo en los frentes de obra. Esto ayuda al analista a inferir la resiliencia operativa y estimar el riesgo de demoras en la entrega física de los proyectos.
+
+### 2. Consumo por Frente de Obra (Barras Horizontales)
+*   **Enfoque Descriptivo:** Muestra y compara la acumulación física de unidades de stock asignadas a los principales proyectos civiles o bodegas periféricas. Ordena de forma descendente los frentes de obra con mayor volumen disponible, resumiendo el estado del inventario distribuido.
+*   **Enfoque Inferencial:** Permite realizar un **Análisis de Varianza de la Demanda entre Proyectos**. Al evaluar la dispersión entre las alturas de las barras, si un único proyecto concentra más del $60\%$ del inventario, se infiere una correlación directa entre el tamaño de la obra y su velocidad de consumo, o bien un acaparamiento ineficiente de materiales (cuello de botella de distribución). Sirve de base para estimar si las diferencias en los niveles de stock entre obras son estadísticamente significativas (ANOVA conceptual) o si corresponden a fluctuaciones normales del azar, ayudando a redistribuir materiales de forma óptima.
+
+### 3. Alertas vs. Stock Seguro por Prioridad (Barras Agrupadas con Conteo & Drill-down)
+*   **Enfoque Descriptivo:** Presenta una clasificación de frecuencia absoluta cruzada. Agrupa side-by-side la cantidad real de materiales que están en estado *Seguro* contra aquellos en *Alerta (Bajo el mínimo)*, segmentándolos por prioridad de abastecimiento (*CRÍTICA*, *MEDIA*, *NORMAL*).
+*   **Enfoque Inferencial:** Representa una **Probabilidad Condicional de Riesgo Operativo** ($P(\text{Alerta} \mid \text{Prioridad})$). Si la tasa de alerta en la prioridad *CRÍTICA* supera en proporción a la de la prioridad *NORMAL*, se infiere una falla estructural en el algoritmo de compras o una alta susceptibilidad al desabastecimiento en insumos estratégicos. Al incorporar interactividad **Drill-down**, el usuario valida de forma empírica la muestra afectada, lo cual permite deducir patrones y correlaciones sobre qué familias de materiales son más propensas a caer bajo el stock de seguridad, permitiendo aplicar modelos predictivos de optimización de inventarios.
+
+### 4. Balance Logístico de Flujo (Pie)
+*   **Enfoque Descriptivo:** Mide la participación y el volumen físico total de las transacciones acumuladas en el sistema, clasificadas según el flujo logístico: *Entradas* (abastecimientos) y *Salidas* (consumos de obra).
+*   **Enfoque Inferencial:** Representa un análisis de **Tasa de Rotación y Estado Estacionario de la Bodega (Balance de Masas Estocástico)**. Analizando las tasas de entrada ($R_{\text{entrada}}$) y salida ($R_{\text{salida}}$), si la tasa de salida supera significativamente a la de entrada en un periodo continuo, se infiere una **tasa de agotamiento neta** que conducirá matemáticamente a un quiebre de stock en el mediano plazo. Permite proyectar la velocidad de desgaste del inventario y predecir cuándo el almacén requerirá inyección urgente de capital de trabajo mediante análisis inferencial de series temporales.
+
+---
+
 ## 🛠️ Stack Tecnológico
 
 * **Backend**: Flask (Python 3.11), SDK de Google Cloud BigQuery, Pandas (para modelado analítico).
