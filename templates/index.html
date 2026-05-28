@@ -931,7 +931,7 @@
                             <line x1="12" y1="20" x2="12" y2="4"></line>
                             <line x1="6" y1="20" x2="6" y2="14"></line>
                         </svg>
-                        Salud del Stock por Prioridad (% Cobertura)
+                        Alertas vs. Stock Seguro por Prioridad
                     </div>
                 </div>
                 <div class="chart-container">
@@ -1497,24 +1497,11 @@
                 }
             });
 
-            // Gráfico 3: Barra Apilada 100% - Salud del Stock por Prioridad (% Cobertura)
+            // Gráfico 3: Barra Agrupada - Alertas vs. Stock Seguro por Prioridad
             const ctxPrioridades = document.getElementById('chartPrioridades').getContext('2d');
             const prioLabels = stats.prioridades.map(p => p.prioridad);
-            
-            // Calcular porcentajes relativos para garantizar la legibilidad en categorías con muy pocos ítems
-            const prioData = stats.prioridades.map(p => {
-                const total = p.bajo_seguridad + p.suficiente;
-                if (total === 0) return { bajo: 0, suficiente: 0, rawBajo: 0, rawSuficiente: 0 };
-                return {
-                    bajo: ((p.bajo_seguridad / total) * 100),
-                    suficiente: ((p.suficiente / total) * 100),
-                    rawBajo: p.bajo_seguridad,
-                    rawSuficiente: p.suficiente
-                };
-            });
-
-            const prioBajo = prioData.map(d => d.bajo);
-            const prioSuficiente = prioData.map(d => d.suficiente);
+            const prioBajo = stats.prioridades.map(p => p.bajo_seguridad);
+            const prioSuficiente = stats.prioridades.map(p => p.suficiente);
 
             chartPrioridadesInstance = new Chart(ctxPrioridades, {
                 type: 'bar',
@@ -1522,7 +1509,7 @@
                     labels: prioLabels,
                     datasets: [
                         {
-                            label: 'Stock Suficiente (Seguro)',
+                            label: 'Materiales con Stock Seguro',
                             data: prioSuficiente,
                             backgroundColor: 'rgba(16, 185, 129, 0.4)',
                             borderColor: 'hsl(145, 80%, 45%)',
@@ -1530,7 +1517,7 @@
                             borderRadius: 4
                         },
                         {
-                            label: 'Bajo Mínimo (Quiebre/Alerta)',
+                            label: 'Materiales en Alerta / Quiebre',
                             data: prioBajo,
                             backgroundColor: 'rgba(239, 68, 68, 0.5)',
                             borderColor: 'hsl(345, 85%, 55%)',
@@ -1539,6 +1526,29 @@
                         }
                     ]
                 },
+                plugins: [{
+                    id: 'datalabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        ctx.save();
+                        ctx.font = 'bold 11px Inter, sans-serif';
+                        ctx.fillStyle = 'hsl(215, 20%, 85%)';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            meta.data.forEach((bar, index) => {
+                                const dataVal = dataset.data[index];
+                                if (dataVal !== null && dataVal !== undefined && dataVal > 0) {
+                                    // Dibujar el número encima de la barra con un pequeño offset
+                                    ctx.fillText(dataVal.toLocaleString(), bar.x, bar.y - 4);
+                                }
+                            });
+                        });
+                        ctx.restore();
+                    }
+                }],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -1553,22 +1563,13 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    const dataIndex = context.dataIndex;
-                                    const datasetIndex = context.datasetIndex;
-                                    const info = prioData[dataIndex];
-                                    const percent = context.raw.toFixed(1);
-                                    if (datasetIndex === 0) {
-                                        return ` Stock Suficiente: ${percent}% (${info.rawSuficiente} ítems)`;
-                                    } else {
-                                        return ` Bajo Mínimo: ${percent}% (${info.rawBajo} ítems)`;
-                                    }
+                                    return ` ${context.dataset.label}: ${context.raw} materiales`;
                                 }
                             }
                         }
                     },
                     scales: {
                         x: {
-                            stacked: true,
                             grid: { display: false },
                             ticks: { color: 'hsl(215, 20%, 65%)' },
                             title: {
@@ -1579,16 +1580,15 @@
                             }
                         },
                         y: {
-                            stacked: true,
-                            max: 100,
                             grid: { color: 'rgba(255,255,255,0.04)' },
+                            grace: '15%', // Da espacio extra en la parte superior para que no se corten las etiquetas de texto
                             ticks: { 
                                 color: 'hsl(215, 20%, 65%)',
-                                callback: function(value) { return value + '%'; }
+                                stepSize: 5
                             },
                             title: {
                                 display: true,
-                                text: 'Porcentaje de Cobertura (%)',
+                                text: 'Cantidad de Materiales (Artículos)',
                                 color: 'hsl(215, 20%, 65%)',
                                 font: { size: 11, family: 'Inter', weight: 'bold' }
                             }
