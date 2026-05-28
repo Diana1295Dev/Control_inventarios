@@ -931,7 +931,7 @@
                             <line x1="12" y1="20" x2="12" y2="4"></line>
                             <line x1="6" y1="20" x2="6" y2="14"></line>
                         </svg>
-                        Cobertura de Stock de Seguridad por Prioridad
+                        Salud del Stock por Prioridad (% Cobertura)
                     </div>
                 </div>
                 <div class="chart-container">
@@ -1497,11 +1497,24 @@
                 }
             });
 
-            // Gráfico 3: Barra Apilada - Cobertura de Stock de Seguridad por Prioridad
+            // Gráfico 3: Barra Apilada 100% - Salud del Stock por Prioridad (% Cobertura)
             const ctxPrioridades = document.getElementById('chartPrioridades').getContext('2d');
             const prioLabels = stats.prioridades.map(p => p.prioridad);
-            const prioBajo = stats.prioridades.map(p => p.bajo_seguridad);
-            const prioSuficiente = stats.prioridades.map(p => p.suficiente);
+            
+            // Calcular porcentajes relativos para garantizar la legibilidad en categorías con muy pocos ítems
+            const prioData = stats.prioridades.map(p => {
+                const total = p.bajo_seguridad + p.suficiente;
+                if (total === 0) return { bajo: 0, suficiente: 0, rawBajo: 0, rawSuficiente: 0 };
+                return {
+                    bajo: ((p.bajo_seguridad / total) * 100),
+                    suficiente: ((p.suficiente / total) * 100),
+                    rawBajo: p.bajo_seguridad,
+                    rawSuficiente: p.suficiente
+                };
+            });
+
+            const prioBajo = prioData.map(d => d.bajo);
+            const prioSuficiente = prioData.map(d => d.suficiente);
 
             chartPrioridadesInstance = new Chart(ctxPrioridades, {
                 type: 'bar',
@@ -1540,7 +1553,15 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return ` ${context.dataset.label}: ${context.raw} ítems`;
+                                    const dataIndex = context.dataIndex;
+                                    const datasetIndex = context.datasetIndex;
+                                    const info = prioData[dataIndex];
+                                    const percent = context.raw.toFixed(1);
+                                    if (datasetIndex === 0) {
+                                        return ` Stock Suficiente: ${percent}% (${info.rawSuficiente} ítems)`;
+                                    } else {
+                                        return ` Bajo Mínimo: ${percent}% (${info.rawBajo} ítems)`;
+                                    }
                                 }
                             }
                         }
@@ -1559,11 +1580,15 @@
                         },
                         y: {
                             stacked: true,
+                            max: 100,
                             grid: { color: 'rgba(255,255,255,0.04)' },
-                            ticks: { color: 'hsl(215, 20%, 65%)', stepSize: 1 },
+                            ticks: { 
+                                color: 'hsl(215, 20%, 65%)',
+                                callback: function(value) { return value + '%'; }
+                            },
                             title: {
                                 display: true,
-                                text: 'Número de Materiales (Ítems)',
+                                text: 'Porcentaje de Cobertura (%)',
                                 color: 'hsl(215, 20%, 65%)',
                                 font: { size: 11, family: 'Inter', weight: 'bold' }
                             }
