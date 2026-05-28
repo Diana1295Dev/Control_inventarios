@@ -77,9 +77,87 @@ La tabla analítica conectada en BigQuery debe tener los siguientes nombres de c
 
 ## 🚀 Arquitectura de Ingestión Resiliente (Fallback Inteligente)
 
-Para garantizar un 100% de éxito en la escritura de registros desde el panel táctil interactivo, el backend en `app.py` implementa un flujo híbrido robusto de inserción:
+Para garantizar un 100% de éxito en la ingesta de telemetría IoT transmitida desde dispositivos ESP32 en Wokwi (o simulada desde la cabina del sensor), el backend en `app.py` implementa un flujo híbrido robusto de inserción:
 1. **Streaming Ingestion (`insert_rows_json`)**: Primero intenta insertar filas directamente en el búfer de streaming de BigQuery de manera síncrona.
 2. **Fallback SQL DML (`INSERT INTO ... VALUES`)**: Si la API de streaming rechaza la transacción por retrasos de propagación o límites de cuota temporales (común en datasets recién creados), el sistema atrapa el error de forma segura y ejecuta una sentencia SQL DML de inserción a través de un Query Job tradicional.
+
+---
+
+## 🔌 Integración IoT: Ingesta de Datos en Vivo con Wokwi (ESP32)
+
+El ecosistema está diseñado bajo una arquitectura IoT moderna. En lugar de depender de registros manuales en oficina, la ingesta de datos ocurre automáticamente desde los frentes de obra a través de microcontroladores **ESP32** simulados en **Wokwi**. 
+
+### 📡 ¿Cómo funciona la arquitectura IoT?
+1. **Sensado y Captura (Wokwi)**: El microcontrolador ESP32 simula lecturas continuas de sensores de peso, ultrasonido de volumen o escaneo de códigos de barra RFID en el almacén de obra.
+2. **Transmisión de Telemetría (POST HTTP)**: El ESP32 se conecta a la red simulada y realiza peticiones `POST` a la pasarela REST API `/api/data` del servidor Flask con formato JSON cifrado conteniendo los datos de movimiento.
+3. **Persistencia en BigQuery**: El servidor Flask recibe el payload de telemetría, valida el esquema y lo inserta en tiempo real en la tabla de **Google BigQuery** (utilizando el mecanismo de fallback resiliente).
+4. **Visualización en Tiempo Real**: El dashboard refresca sus gráficos de forma automatizada al detectar nuevos movimientos ingresados por los dispositivos IoT.
+
+### 📝 Ejemplo de Código ESP32 (Arduino C++) para Wokwi:
+Puedes simular el hardware IoT utilizando el siguiente sketch en tu simulación de Wokwi para enviar telemetría en tiempo real:
+
+```cpp
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+const char* serverUrl = "https://control-inventarios-c0f821cf.a.run.app/api/data"; // Reemplazar con tu URL de Cloud Run
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nConectado a WiFi Wokwi!");
+}
+
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverUrl);
+    http.addHeader("Content-Type", "application/json");
+    
+    // Simular lectura de sensor (ej. entrada de cemento a Bodega Norte)
+    StaticJsonDocument<256> doc;
+    doc["nro_vale"] = "VALE-IOT-" + String(random(1000, 9999));
+    doc["fecha_registro"] = "2026-05-28";
+    doc["item_material"] = "CEMENTO SOL PORTLAND TIPO I";
+    doc["familia_material"] = "AGREGADOS Y CEMENTOS";
+    doc["flujo_almacen"] = "ENTRADA";
+    doc["cantidad_transaccion"] = 50; // 50 bolsas simuladas
+    doc["existencia_anterior"] = 120;
+    doc["existencia_actual"] = 170; // 120 + 50
+    doc["inventario_seguridad"] = 60;
+    doc["estado_disponibilidad"] = "DISPONIBLE";
+    doc["frente_o_bodega"] = "BODEGA NORTE";
+    doc["unidad_control"] = "BOLSA";
+    doc["prioridad_abastecimiento"] = "MEDIA";
+    doc["concepto_logitico"] = "INGRESO POR LOTE IoT";
+    
+    String requestBody;
+    serializeJson(doc, requestBody);
+    
+    int httpResponseCode = http.POST(requestBody);
+    
+    if (httpResponseCode > 0) {
+      String response = http.getString();
+      Serial.println("Código HTTP: " + String(httpResponseCode));
+      Serial.println("Respuesta Servidor: " + response);
+    } else {
+      Serial.println("Error en la transmisión de telemetría IoT");
+    }
+    http.end();
+  }
+  
+  // Transmitir cada 30 segundos
+  delay(30000);
+}
+```
 
 ---
 
@@ -181,7 +259,7 @@ Este guión interactivo está diseñado para que **4 integrantes** puedan presen
 >
 > **Características clave que diseñamos para la interacción:**
 > 1. **Encabezado Inteligente:** Muestra el logo dinámico y un indicador de estado que verifica síncronamente si la base de datos distribuida en Google BigQuery está conectada.
-> 2. **Panel Táctil de Registro:** Diseñamos un formulario interactivo con un **Autocalculador Matemático**. Al ingresar stock anterior y transado, el sistema autocalcula la existencia real y asigna dinámicamente el estado del stock (Disponible, Crítico o Agotado).
+> 2. **Simulador de Transmisión de Sensores IoT (Wokwi):** En producción, el stock se actualiza automáticamente mediante dispositivos físicos (como básculas, lectores RFID o escáneres de código de barras basados en **ESP32** simulados en **Wokwi**). Para la demostración en vivo, diseñamos un panel interactivo que modela de forma idéntica esta telemetría IoT: al activarse, permite simular la transmisión de una trama de datos de sensor mediante un protocolo POST en caliente a nuestra pasarela analítica, calculando de forma automática el stock y disparando el estado de disponibilidad del material.
 > 3. **NUEVA FUNCIONALIDAD - Modal de Desglose de Alertas:** A petición del negocio, implementamos interactividad directa en la tarjeta de alertas. Al hacer clic sobre el card de 'Frentes Activos' que avisa la existencia de stock crítico (por ejemplo, las 54 alertas activas), la interfaz abre un **modal premium translúcido** con el desglose detallado en tiempo real. Esta tabla muestra el número de vale, el material específico, su ubicación (bodega/frente), prioridad, stock actual, stock de seguridad y el **déficit exacto** de unidades faltantes para activar la orden de compra urgente. 
 > 
 > *Le cedo la palabra a mi compañero para explicar la arquitectura de datos."*
@@ -195,15 +273,15 @@ Este guión interactivo está diseñado para que **4 integrantes** puedan presen
 >
 > *Nuestra principal meta era asegurar una latencia mínima y una conexión 100% segura con **Google BigQuery**. Para ello, en `app.py` implementamos el SDK oficial de Google Cloud. El sistema utiliza **Application Default Credentials (ADC)** de forma local y hereda la Service Account de forma transparente en la nube, eliminando la necesidad de exponer claves JSON físicas en producción.*
 >
-> **Desarrollamos una API interna con 3 endpoints clave:**
+> **Desarrollamos una API interna y Pasarela IoT con 3 endpoints clave:**
 > 1. `/api/status`: Realiza un ping síncrono a BigQuery validando la existencia de la tabla e identificando el ID del proyecto, dataset y tabla.
-> 2. `/api/data`: Recupera de forma paginada y filtrable los últimos registros para evitar sobrecarga de red, y procesa las peticiones `POST` para guardar datos.
+> 2. `/api/data`: Recupera de forma paginada y filtrable los últimos registros, y actúa como un **REST IoT Gateway** para procesar las peticiones `POST` enviadas por los microcontroladores ESP32 en Wokwi.
 > 3. `/api/stats`: Realiza consultas de agregación analítica de alta velocidad en BigQuery para alimentar el motor de gráficos en el frontend.
 >
-> **Arquitectura de Ingestión Resiliente (Garantía de Escritura):**
-> *Al momento de registrar un nuevo movimiento de inventario, implementamos una lógica híbrida de tolerancia a fallos única:*
-> *   *Primero, intentamos insertar el registro mediante **Streaming Ingestion (`insert_rows_json`)** para disponibilidad inmediata.*
-> *   *Si BigQuery rechaza el streaming temporalmente por límites de cuota de propagación en la tabla analítica, el backend activa automáticamente un **Fallback a DML tradicional**, ejecutando un Job de inserción directa (`INSERT INTO ... VALUES`). Esto garantiza un **100% de persistencia de datos** ante cualquier eventualidad de red.*
+> **Arquitectura de Ingestión Resiliente para Dispositivos IoT:**
+> *Al momento de recibir telemetría IoT desde Wokwi, implementamos una lógica híbrida de tolerancia a fallos única para manejar el flujo continuo de sensores:*
+> *   *Primero, intentamos insertar el registro mediante **Streaming Ingestion (`insert_rows_json`)** para lograr disponibilidad inmediata en el buffer de BigQuery.*
+> *   *Si la API de BigQuery rechaza la ráfaga de streaming temporalmente por límites de cuota de propagación en la tabla analítica, el backend activa automáticamente un **Fallback a DML tradicional**, ejecutando un Job de inserción directa (`INSERT INTO ... VALUES`). Esto garantiza un **100% de persistencia de datos** de telemetría ante cualquier eventualidad de concurrencia.*
 >
 > *Ahora, pasaremos a analizar los KPIs y el motor analítico de visualización."*
 
