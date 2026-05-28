@@ -203,22 +203,24 @@ def get_stats():
         query_prioridad = f"""
         SELECT 
             COALESCE(prioridad_abastecimiento, 'MEDIA') as prioridad,
-            ROUND(AVG(existencia_actual), 1) as avg_actual,
-            ROUND(AVG(inventario_seguridad), 1) as avg_seguridad
+            COUNTIF(existencia_actual < inventario_seguridad) as bajo_seguridad,
+            COUNTIF(existencia_actual >= inventario_seguridad) as suficiente
         FROM `{TABLE_FULL_NAME}`
         GROUP BY prioridad
         ORDER BY 
             CASE prioridad 
+                WHEN 'CRITICA' THEN 1 
                 WHEN 'ALTA' THEN 1 
                 WHEN 'MEDIA' THEN 2 
-                ELSE 3 
+                WHEN 'NORMAL' THEN 3
+                ELSE 4 
             END
         """
         job_prioridad = bq_client.query(query_prioridad)
         prioridades = [{
             "prioridad": row["prioridad"], 
-            "avg_actual": float(row["avg_actual"]), 
-            "avg_seguridad": float(row["avg_seguridad"])
+            "bajo_seguridad": int(row["bajo_seguridad"] or 0), 
+            "suficiente": int(row["suficiente"] or 0)
         } for row in job_prioridad.result()]
         
         # 5. Análisis del Flujo Logístico (Entradas vs. Salidas)
