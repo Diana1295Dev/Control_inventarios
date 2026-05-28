@@ -34,44 +34,46 @@ Este dashboard no es solo un registrador de transacciones; actúa como un **Asis
 
 ---
 
-## 📈 Análisis de Negocio y Lectura Descriptiva de Gráficos
+## 📈 ¿Cómo interpretar nuestros gráficos? Guía práctica para la toma de decisiones
 
-Para facilitar la toma de decisiones estratégicas de forma ágil, el dashboard presenta 4 visualizaciones analíticas interactivas. A continuación, se detalla qué describe cada gráfico en tiempo real y qué conclusiones operativas (lecturas inferenciales prácticas) puede extraer un gerente de logística al analizarlos de manera visual e intuitiva:
+Diseñamos estas 4 visualizaciones para que no sean simples dibujos estáticos con números abstractos. Queremos que cada gráfico sea como un compañero de equipo que te cuenta qué está pasando en la obra en tiempo real y te ayuda a tomar decisiones rápidas para evitar que los proyectos se detengan.
+
+Aquí te explicamos de manera muy sencilla y humana cómo leer cada uno de ellos:
 
 ---
 
 ### 1. Gráfico de Salud del Inventario (Dona)
-*   **¿Qué describe de forma inmediata?**
-    Clasifica transversalmente el stock disponible en tres estados clave mutuamente excluyentes, calculando su distribución porcentual y cantidad física en tiempo real:
-    *   🔴 **Crítico (Agotado)**: Insumos con existencia en `0`, representando paradas de obra activas.
-    *   🟡 **Riesgo (Bajo Mínimo)**: Materiales que se encuentran operando por debajo de su stock de seguridad establecido.
-    *   🟢 **Saludable (Óptimo)**: Materiales con existencias suficientes que garantizan la continuidad de las actividades.
-*   **¿Qué permite deducir y qué decisión tomar?**
-    Mide de forma directa la **estabilidad de la cadena de suministro**. Si el gráfico muestra más de un $15\%$ de materiales en estado *Crítico* o *En Riesgo*, el gerente puede deducir de inmediato que existe inestabilidad en los tiempos de entrega de los proveedores (*Lead Times*) o que el ritmo de consumo de las obras se aceleró inesperadamente. La acción correctora es lanzar órdenes de compra prioritarias para los insumos en amarillo y rojo.
+*   **¿Qué nos muestra al primer vistazo?**
+    Es como tomarle la temperatura a nuestro almacén. Nos divide todos los materiales en tres colores muy intuitivos:
+    *   🔴 **Crítico (Agotado)**: Materiales que se nos terminaron por completo (¡alerta roja, la obra se puede parar!).
+    *   🟡 **Riesgo (Bajo Mínimo)**: Insumos que todavía tenemos, pero están por debajo del límite de seguridad. Es nuestra zona de advertencia.
+    *   🟢 **Saludable (Óptimo)**: Todo lo que tenemos en cantidades suficientes para trabajar con total tranquilidad.
+*   **¿Cómo nos ayuda a decidir?**
+    Si ves que la dona tiene un trozo rojo o amarillo grande (más del 15%), significa que nuestra cadena de suministro está teniendo problemas. Puede que los proveedores estén tardando en entregar o que las obras estén consumiendo más rápido de lo previsto. Al ver esto, el encargado de compras sabe de inmediato que debe levantar el teléfono y priorizar los pedidos de esos materiales en riesgo antes de que sea tarde.
 
 ---
 
 ### 2. Consumo por Frente de Obra (Barras Horizontales)
-*   **¿Qué describe de forma inmediata?**
-    Clasifica de manera descendente (Top 5) el volumen físico acumulado de unidades de stock asignadas y consumidas por cada proyecto civil o bodega de obra independiente. Permite identificar visualmente qué frentes concentran la mayor cantidad de recursos físicos.
-*   **¿Qué permite deducir y qué decisión tomar?**
-    Permite detectar la **desviación de demanda y distribución inter-obras**. Si una sola obra concentra el $70\%$ de los recursos disponibles mientras las demás sufren desabastecimiento, se deduce una asignación ineficiente de stock o acaparamiento localizado. Esto ayuda a coordinar transferencias de inventario directas (*cross-docking*) desde bodegas sobreabastecidas hacia frentes en riesgo, optimizando el stock global sin realizar compras redundantes.
+*   **¿Qué nos muestra al primer vistazo?**
+    Nos revela de manera muy clara cuál de todas nuestras obras se está llevando la mayor parte de los materiales. Muestra las 5 obras o frentes de trabajo con mayor stock en este momento, ordenadas de mayor a menor.
+*   **¿Cómo nos ayuda a decidir?**
+    Esto evita que caigamos en el error de "acaparar". Si notas que una sola obra tiene casi todo el material de la empresa mientras las otras están sufriendo por falta de insumos, no hace falta que salgas corriendo a comprar más. Nos ayuda a tomar la sabia decisión de hacer un **traspaso de materiales** de una obra sobreabastecida a otra que está en apuros. Así ahorramos dinero y aprovechamos al máximo lo que ya tenemos comprado.
 
 ---
 
 ### 3. Alertas vs. Stock Seguro por Prioridad (Barras Agrupadas con Conteo & Drill-down)
-*   **¿Qué describe de forma inmediata?**
-    Compara lado a lado la cantidad real de materiales en estado **Seguro (Verde)** contra los que están en **Alerta de Quiebre (Rojo)**, divididos discretamente según la criticidad del material para la obra: **CRÍTICA**, **MEDIA** y **NORMAL**.
-*   **¿Qué permite deducir y qué decisión tomar?**
-    Mide la **efectividad del algoritmo de compras**. Si la prioridad *CRÍTICA* acumula una alta proporción de alertas rojas en comparación con las barras seguras verdes, se deduce un fallo en las políticas de reabastecimiento en insumos estratégicos. Al incorporar interactividad **Drill-down**, el usuario puede hacer clic directamente en la barra roja del gráfico para abrir un modal con la lista exacta pre-filtrada de materiales en quiebre, facilitando una orden de compra urgente al instante.
+*   **¿Qué nos muestra al primer vistazo?**
+    Este gráfico pone frente a frente los materiales que están seguros (en verde) y los que están en peligro de agotarse (en rojo), pero organizados por su nivel de importancia para nosotros: **CRÍTICA**, **MEDIA** y **NORMAL**.
+*   **¿Cómo nos ayuda a decidir?**
+    Nos ayuda a poner el foco en lo que de verdad importa. Si vemos barras rojas muy altas en la categoría **CRÍTICA**, significa que estamos descuidando los insumos más vitales para la constructora. Lo mejor de todo es que este gráfico es **interactivo (Drill-down)**: si ves una barra roja preocupante, simplemente **haz clic sobre ella**. Al hacerlo, se abrirá una ventana emergente detallada que te dirá exactamente cuáles son esos materiales en alerta, con sus números de vale, en qué obra están y cuántas unidades nos faltan para estar seguros. ¡Es una herramienta quirúrgica para comprar exactamente lo necesario en un par de clics!
 
 ---
 
 ### 4. Balance Logístico de Flujo (Pie)
-*   **¿Qué describe de forma inmediata?**
-    Representa la relación porcentual de participación transaccional del movimiento del almacén, clasificando las operaciones acumuladas según el sentido del flujo físico: **Entradas** (abastecimiento que ingresa a bodega) y **Salidas** (despacho y consumo enviado a las obras).
-*   **¿Qué permite deducir y qué decisión tomar?**
-    Mide el **estado de equilibrio y la velocidad de agotamiento**. Permite evaluar la relación neta entre compras y consumo. Si las *Salidas* superan de forma persistente a las *Entradas*, se deduce que la constructora consume sus reservas a un ritmo insostenible. Esto alerta anticipadamente a la gerencia de que el inventario se agotará por completo en las semanas siguientes si no se inyecta capital de trabajo o se ajustan los despachos a obra.
+*   **¿Qué nos muestra al primer vistazo?**
+    Nos permite ver la balanza de nuestro almacén: cuántos materiales están ingresando por compras (**Entradas**) frente a cuántos estamos despachando hacia las obras civiles (**Salidas**).
+*   **¿Cómo nos ayuda a decidir?**
+    Nos avisa si nos estamos quedando sin reservas. Si vemos que la rebanada de las *Salidas* es gigantesca comparada con la de las *Entradas*, significa que estamos consumiendo nuestro stock mucho más rápido de lo que lo estamos reponiendo. Es una alerta temprana formidable: nos está diciendo que, si no compramos insumos pronto o reducimos el ritmo de despacho, en las próximas semanas nos quedaremos con el almacén completamente vacío.
 
 ---
 
