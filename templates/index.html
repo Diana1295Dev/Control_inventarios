@@ -1141,7 +1141,7 @@
     <div class="modal-overlay" id="modalAlertsOverlay">
         <div class="modal-card" style="max-width: 900px;">
             <div class="modal-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%);">
-                <h2 style="display: flex; align-items: center; gap: 0.5rem; color: #fff;">
+                <h2 style="display: flex; align-items: center; gap: 0.5rem; color: #fff;" id="modalAlertsTitle">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(345, 85%, 55%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                         <line x1="12" y1="9" x2="12" y2="13"></line>
@@ -1552,6 +1552,21 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    onHover: (event, activeElements) => {
+                        event.chart.canvas.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                    },
+                    onClick: (event, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const firstPoint = activeElements[0];
+                            const datasetIndex = firstPoint.datasetIndex; // 0 para Stock Seguro, 1 para Alerta
+                            const index = firstPoint.index;
+                            
+                            const priorityLabel = chartPrioridadesInstance.data.labels[index];
+                            const isAlert = datasetIndex === 1;
+                            
+                            openAlertsModal(priorityLabel, isAlert);
+                        }
+                    },
                     plugins: {
                         legend: {
                             position: 'top',
@@ -1853,38 +1868,95 @@
         // -------------------------------------------------------------
         // MODAL DE DESGLOSE DE ALERTAS DE STOCK CRÍTICO
         // -------------------------------------------------------------
-        function openAlertsModal() {
+        function openAlertsModal(priorityFilter = null, onlyAlerts = true) {
             alertsTableBody.innerHTML = '';
             
-            // Filtrar elementos que se encuentran por debajo del stock de seguridad
-            const alertItems = allData.filter(item => item.existencia_actual < item.inventario_seguridad);
-            alertModalCount.textContent = alertItems.length;
+            // Filtrar elementos según el filtro de la gráfica
+            let filteredItems = allData;
             
-            if (alertItems.length === 0) {
+            if (onlyAlerts) {
+                filteredItems = filteredItems.filter(item => item.existencia_actual < item.inventario_seguridad);
+            }
+            
+            if (priorityFilter) {
+                filteredItems = filteredItems.filter(item => {
+                    const prio = (item.prioridad_abastecimiento || 'MEDIA').toUpperCase();
+                    return prio === priorityFilter.toUpperCase();
+                });
+            }
+            
+            // Actualizar título del modal dinámicamente
+            const modalTitleEl = document.getElementById('modalAlertsTitle');
+            if (modalTitleEl) {
+                let titleText = 'Desglose de Alertas de Stock Mínimo';
+                let strokeColor = 'hsl(345, 85%, 55%)'; // Red for alerts
+                
+                if (priorityFilter) {
+                    if (onlyAlerts) {
+                        titleText = `Alertas de Stock: Prioridad ${priorityFilter}`;
+                    } else {
+                        titleText = `Stock Seguro: Prioridad ${priorityFilter}`;
+                        strokeColor = 'hsl(145, 80%, 45%)'; // Green for safe stock
+                    }
+                }
+                
+                modalTitleEl.innerHTML = `
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    ${titleText} (<span id="alertModalCount">0</span>)
+                `;
+            }
+
+            // Actualizar subtítulo descriptivo dinámicamente
+            const modalSubTitleEl = document.querySelector('#modalAlertsOverlay .modal-body p');
+            if (modalSubTitleEl) {
+                if (onlyAlerts) {
+                    modalSubTitleEl.innerHTML = `Los siguientes materiales se encuentran por debajo del <strong>Inventario de Seguridad</strong> en la prioridad seleccionada. Requieren reabastecimiento urgente.`;
+                } else {
+                    modalSubTitleEl.innerHTML = `Los siguientes materiales operan de forma segura por encima o al mismo nivel del <strong>Inventario de Seguridad</strong> en la prioridad seleccionada.`;
+                }
+            }
+
+            const modalCountEl = document.getElementById('alertModalCount');
+            if (modalCountEl) {
+                modalCountEl.textContent = filteredItems.length;
+            }
+            
+            if (filteredItems.length === 0) {
                 alertsTableBody.innerHTML = `
                     <tr>
                         <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">
-                            ✨ No hay alertas de stock activo en este momento. ¡Excelente gestión lograda!
+                            ✨ No hay materiales en este momento bajo los criterios seleccionados.
                         </td>
                     </tr>
                 `;
             } else {
-                alertItems.forEach(item => {
-                    const deficit = item.inventario_seguridad - item.existencia_actual;
+                filteredItems.forEach(item => {
+                    const deficit = Math.max(0, item.inventario_seguridad - item.existencia_actual);
                     const tr = document.createElement('tr');
                     
                     // Prioridad de estilo
                     let prioClass = 'badge normal';
-                    if (item.prioridad_abastecimiento === 'ALTA') prioClass = 'badge alert';
+                    const prio = (item.prioridad_abastecimiento || 'MEDIA').toUpperCase();
+                    if (prio === 'ALTA' || prio === 'CRITICA') prioClass = 'badge alert';
+                    else if (prio === 'MEDIA') prioClass = 'badge warning';
                     
+                    let deficitCell = `<td style="text-align: right; font-weight: bold; color: var(--danger);">🔻 ${deficit.toLocaleString()}</td>`;
+                    if (deficit === 0) {
+                        deficitCell = `<td style="text-align: right; color: var(--success); font-weight: bold;">✅ Seguro</td>`;
+                    }
+
                     tr.innerHTML = `
                         <td><strong>📄 ${item.nro_vale || '-'}</strong></td>
                         <td><span style="font-weight: 500;">📦 ${item.item_material || '-'}</span></td>
                         <td><span>📍 ${item.frente_o_bodega || '-'}</span></td>
                         <td><span class="${prioClass}">${item.prioridad_abastecimiento || 'MEDIA'}</span></td>
-                        <td style="text-align: right; font-weight: bold; color: hsl(345, 85%, 70%);">📈 ${item.existencia_actual.toLocaleString()}</td>
+                        <td style="text-align: right; font-weight: bold; color: ${deficit > 0 ? 'hsl(345, 85%, 70%)' : 'var(--success)'};">📈 ${item.existencia_actual.toLocaleString()}</td>
                         <td style="text-align: right; font-weight: 500;">⚠️ ${item.inventario_seguridad.toLocaleString()}</td>
-                        <td style="text-align: right; font-weight: bold; color: var(--danger);">🔻 ${deficit.toLocaleString()}</td>
+                        ${deficitCell}
                     `;
                     alertsTableBody.appendChild(tr);
                 });
