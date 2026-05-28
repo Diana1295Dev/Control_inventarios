@@ -139,4 +139,96 @@ Ejecuta la siguiente suite de comandos para construir la imagen en la nube con *
 ---
 
 ## ⚡ Autores y Soporte
+
 Este panel fue estructurado e implementado con pasión y excelencia técnica por un **Experto en Business Intelligence & Cloud Software Architecture**. Para soporte o mejoras analíticas adicionales, contáctanos. 🏗️📈
+
+---
+
+## 🎤 Guión Explicativo para Exposición (Estructura para 4 Expositores)
+
+Este guión interactivo está diseñado para que **4 integrantes** puedan presentar de forma coordinada, profesional y detallada la solución completa ante evaluadores o clientes. Cada sección aborda un pilar del software (Diseño, Backend, Analítica y DevOps).
+
+---
+
+### 👤 INTEGRANTE 1: Líder de Proyecto, Diseño UX/UI e Interacción
+**Tema: Introducción, Propuesta de Valor, Diseño Glassmorphism e Interactividad**
+
+> *"Buenos días a todos. Hoy presentaremos nuestro **Dashboard Inteligente de Control de Inventarios para Constructoras**, una plataforma diseñada para resolver un problema crítico en la industria: **el quiebre de stock de materiales en frentes de obra**, el cual paraliza maquinarias, causa sobrecostos y demora los proyectos civiles.*
+>
+> *Mi rol se centró en la dirección del proyecto y el diseño de la interfaz de usuario (UX/UI). Decidimos alejarnos de los diseños tradicionales y genéricos para implementar una estética **Glassmorphic en Modo Oscuro** de alta gama. Esto se logra mediante fondos translúcidos, filtros de desenfoque (`backdrop-filter: blur`), gradientes sutiles (tonalidades HSL personalizadas en azules y cianes) y micro-animaciones en los componentes.*
+>
+> **Características clave que diseñamos para la interacción:**
+> 1. **Encabezado Inteligente:** Muestra el logo dinámico y un indicador de estado que verifica síncronamente si la base de datos distribuida en Google BigQuery está conectada.
+> 2. **Panel Táctil de Registro:** Diseñamos un formulario interactivo con un **Autocalculador Matemático**. Al ingresar stock anterior y transado, el sistema autocalcula la existencia real y asigna dinámicamente el estado del stock (Disponible, Crítico o Agotado).
+> 3. **NUEVA FUNCIONALIDAD - Modal de Desglose de Alertas:** A petición del negocio, implementamos interactividad directa en la tarjeta de alertas. Al hacer clic sobre el card de 'Frentes Activos' que avisa la existencia de stock crítico (por ejemplo, las 54 alertas activas), la interfaz abre un **modal premium translúcido** con el desglose detallado en tiempo real. Esta tabla muestra el número de vale, el material específico, su ubicación (bodega/frente), prioridad, stock actual, stock de seguridad y el **déficit exacto** de unidades faltantes para activar la orden de compra urgente. 
+> 
+> *Le cedo la palabra a mi compañero para explicar la arquitectura de datos."*
+
+---
+
+### 👤 INTEGRANTE 2: Arquitecto de Software y Backend
+**Tema: Backend en Flask, Integración Nativa con BigQuery y Mecanismos de Ingesta Resilientes**
+
+> *"Muchas gracias. Para dar vida a este diseño UX, estructuramos un backend altamente optimizado en **Python** utilizando el framework ligero **Flask**.*
+>
+> *Nuestra principal meta era asegurar una latencia mínima y una conexión 100% segura con **Google BigQuery**. Para ello, en `app.py` implementamos el SDK oficial de Google Cloud. El sistema utiliza **Application Default Credentials (ADC)** de forma local y hereda la Service Account de forma transparente en la nube, eliminando la necesidad de exponer claves JSON físicas en producción.*
+>
+> **Desarrollamos una API interna con 3 endpoints clave:**
+> 1. `/api/status`: Realiza un ping síncrono a BigQuery validando la existencia de la tabla e identificando el ID del proyecto, dataset y tabla.
+> 2. `/api/data`: Recupera de forma paginada y filtrable los últimos registros para evitar sobrecarga de red, y procesa las peticiones `POST` para guardar datos.
+> 3. `/api/stats`: Realiza consultas de agregación analítica de alta velocidad en BigQuery para alimentar el motor de gráficos en el frontend.
+>
+> **Arquitectura de Ingestión Resiliente (Garantía de Escritura):**
+> *Al momento de registrar un nuevo movimiento de inventario, implementamos una lógica híbrida de tolerancia a fallos única:*
+> *   *Primero, intentamos insertar el registro mediante **Streaming Ingestion (`insert_rows_json`)** para disponibilidad inmediata.*
+> *   *Si BigQuery rechaza el streaming temporalmente por límites de cuota de propagación en la tabla analítica, el backend activa automáticamente un **Fallback a DML tradicional**, ejecutando un Job de inserción directa (`INSERT INTO ... VALUES`). Esto garantiza un **100% de persistencia de datos** ante cualquier eventualidad de red.*
+>
+> *Ahora, pasaremos a analizar los KPIs y el motor analítico de visualización."*
+
+---
+
+### 👤 INTEGRANTE 3: Especialista en Data Analytics y Visualización
+**Tema: Métricas de Negocio (KPIs), Gráficos Estadísticos Clave y Legibilidad de Datos**
+
+> *"Gracias. Mi rol se enfocó en traducir los datos crudos de BigQuery en valor de negocio a través de métricas analíticas e interactividad gráfica impulsada por **Chart.js**.*
+>
+> *Hemos definido 4 KPIs principales en el panel superior:*
+> 1. **Total Movimientos:** Volumen histórico de transacciones logísticas.
+> 2. **Stock Total Obra:** Suma absoluta del inventario disponible en toda la organización.
+> 3. **Nivel de Servicio de Obra (%):** Esfera clave que mide qué porcentaje de transacciones operan de forma segura por encima del inventario mínimo.
+> 4. **Frentes Activos & Alertas:** Alerta visual y cuantitativa parpadeante que avisa cuántos materiales críticos requieren compra urgente.
+>
+> **Análisis Estadístico y Visualizaciones con Legibilidad de Alto Rendimiento:**
+> *Para cumplir con los estándares más exigentes, rediseñamos los gráficos de Chart.js agregando **etiquetas explícitas de ejes**, **leyendas informativas** y **tooltips interactivos con porcentajes calculados dinámicamente**:*
+>
+> 1. **Gráfico 1: Salud del Inventario (Dona):** Categoriza el stock en tres niveles: *Crítico (Quiebre)*, *En Riesgo* y *Saludable*. Su tooltip dinámico muestra la cantidad exacta de materiales en dicho estado y calcula síncronamente su porcentaje frente al total.
+> 2. **Gráfico 2: Consumo por Frente de Obra (Barras Horizontales):** Visualiza los frentes de trabajo o proyectos que concentran la mayor cantidad de recursos. Añadimos títulos claros en los ejes X (*Cantidad en Almacén*) e Y (*Proyectos / Frentes de Obra*) y personalizamos el tooltip para denotar las unidades en stock.
+> 3. **Gráfico 3: Brecha de Stock de Seguridad (Barras Agrupadas):** Compara el *Stock Real Promedio* contra el *Límite de Seguridad Promedio* segmentado por Prioridad de Abastecimiento (**Alta**, **Media**, **Baja**). Cuenta con títulos descriptivos en los ejes y leyendas claras para que el departamento de compras identifique instantáneamente el déficit en materiales de prioridad Alta.
+> 4. **Gráfico 4: Balance Logístico (Circular/Pie):** Compara las transacciones de entrada contra salida. Sus tooltips desglosan el volumen exacto y la participación porcentual de flujo de entrada/salida.
+> 
+> *A continuación, revisaremos cómo automatizamos el despliegue e infraestructura."*
+
+---
+
+### 👤 INTEGRANTE 4: Ingeniero de DevOps y Cloud Computing
+**Tema: Git Limpio, Contenedorización, Despliegue en Cloud Run e IAM Security**
+
+> *"Muchas gracias. Para asegurar que este sistema sea fácilmente escalable, portable y seguro en la nube, implementamos un flujo de trabajo basado en metodologías **DevOps**.*
+>
+> **Gestión de Versiones y Git Limpio:**
+> *Inicializamos un repositorio robusto en GitHub. Diseñamos un archivo `.gitignore` estricto para evitar la fuga accidental de credenciales locales (`credentials.json`), variables de configuración sensible (`.env`) o dependencias de librerías locales (`venv/`).*
+>
+> **Contenedorización con Docker:**
+> *Escribimos un `Dockerfile` optimizado multicapa. El contenedor empaqueta la app de Flask con todas sus dependencias en un entorno aislado bajo un servidor HTTP para producción (`gunicorn`), garantizando que la aplicación se comporte exactamente igual en local y en la nube.*
+>
+> **Despliegue Continuo en Google Cloud Platform (GCP):**
+> *Implementamos una canalización rápida utilizando comandos de Google Cloud SDK:*
+> 1. *Compilamos nuestra imagen de contenedor en la nube de forma segura utilizando **Google Cloud Build**.*
+> 2. *La registramos en **Artifact Registry**.*
+> 3. *Realizamos el despliegue serverless en **Google Cloud Run**.*
+>
+> **Configuración de Permisos IAM Seguros en Producción:**
+> *Al desplegar en Cloud Run, resolvemos las conexiones a BigQuery de forma óptima. En lugar de empotrar archivos JSON de credenciales, le otorgamos a la **Service Account de Compute por defecto** de Cloud Run los roles de **BigQuery Data Editor** y **BigQuery Job User** en la consola IAM de GCP. De esta forma, el contenedor hereda los privilegios dinámicamente y se conecta de manera directa e impenetrable.*
+>
+> *Con esto, concluimos nuestra exposición. Hemos entregado una solución integral: interactiva, analítica, altamente resiliente en BigQuery y automatizada en la nube. Quedamos atentos a sus preguntas. Muchas gracias."*
+

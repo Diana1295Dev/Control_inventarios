@@ -1137,6 +1137,49 @@
         </div>
     </div>
 
+    <!-- MODAL DE DESGLOSE DE ALERTAS DE STOCK -->
+    <div class="modal-overlay" id="modalAlertsOverlay">
+        <div class="modal-card" style="max-width: 900px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%);">
+                <h2 style="display: flex; align-items: center; gap: 0.5rem; color: #fff;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(345, 85%, 55%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Desglose de Alertas de Stock Mínimo (<span id="alertModalCount">0</span>)
+                </h2>
+                <button class="close-btn" id="btnCloseAlertsModal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    Los siguientes materiales se encuentran por debajo del <strong>Inventario de Seguridad</strong>. Requieren reabastecimiento urgente.
+                </p>
+                <div class="table-responsive" style="max-height: 50vh; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>📄 Vale</th>
+                                <th>📦 Material</th>
+                                <th>📍 Frente / Bodega</th>
+                                <th>⚡ Prioridad</th>
+                                <th style="text-align: right;">📊 Stock Actual</th>
+                                <th style="text-align: right;">⚠️ Mín. Seguridad</th>
+                                <th style="text-align: right; color: hsl(345, 85%, 70%);">🔻 Déficit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alertsTableBody">
+                            <!-- Se rellenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btnCancelAlertsModal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST DE NOTIFICACIONES -->
     <div class="toast" id="toast">
         <span id="toastMessage">Operación realizada con éxito</span>
@@ -1188,6 +1231,13 @@
         const btnCalcStock = document.getElementById('btnCalcStock');
         const toast = document.getElementById('toast');
 
+        // Elementos para el modal de desglose de alertas
+        const modalAlertsOverlay = document.getElementById('modalAlertsOverlay');
+        const btnCloseAlertsModal = document.getElementById('btnCloseAlertsModal');
+        const btnCancelAlertsModal = document.getElementById('btnCancelAlertsModal');
+        const alertsTableBody = document.getElementById('alertsTableBody');
+        const alertModalCount = document.getElementById('alertModalCount');
+
         // Inicialización al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             // Pre-llenar fecha en el formulario (hoy)
@@ -1208,6 +1258,13 @@
             btnSaveData.addEventListener('click', submitForm);
             
             btnCalcStock.addEventListener('click', autocalculateStock);
+
+            // Eventos del modal de desglose de alertas
+            kpiAlertCard.style.cursor = 'pointer';
+            kpiAlertCard.title = 'Haga clic para ver el desglose detallado de alertas de stock';
+            kpiAlertCard.addEventListener('click', openAlertsModal);
+            btnCloseAlertsModal.addEventListener('click', closeAlertsModal);
+            btnCancelAlertsModal.addEventListener('click', closeAlertsModal);
 
             // Cargas iniciales
             checkConnectionStatus();
@@ -1358,8 +1415,18 @@
                             position: 'right',
                             labels: {
                                 color: 'hsl(215, 20%, 65%)',
-                                font: { size: 11, family: 'Inter' },
+                                font: { size: 12, family: 'Inter', weight: '500' },
                                 boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return ` ${context.label}: ${value} ítems (${percentage}%)`;
+                                }
                             }
                         }
                     },
@@ -1377,7 +1444,7 @@
                 data: {
                     labels: frenteLabels,
                     datasets: [{
-                        label: 'Materiales Asignados',
+                        label: 'Stock Actual en Almacén',
                         data: frenteData,
                         backgroundColor: 'rgba(6, 182, 212, 0.4)',
                         borderColor: 'hsl(180, 100%, 45%)',
@@ -1390,16 +1457,41 @@
                     maintainAspectRatio: false,
                     indexAxis: 'y',
                     plugins: {
-                        legend: { display: false }
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 11, family: 'Inter' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Stock: ${context.raw.toLocaleString()} unidades`;
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {
                             grid: { color: 'rgba(255,255,255,0.04)' },
-                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                            ticks: { color: 'hsl(215, 20%, 65%)' },
+                            title: {
+                                display: true,
+                                text: 'Cantidad en Almacén (Unidades)',
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 11, family: 'Inter', weight: 'bold' }
+                            }
                         },
                         y: {
                             grid: { display: false },
-                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                            ticks: { color: 'hsl(215, 20%, 65%)' },
+                            title: {
+                                display: true,
+                                text: 'Proyectos / Frentes de Obra',
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 11, family: 'Inter', weight: 'bold' }
+                            }
                         }
                     }
                 }
@@ -1443,18 +1535,37 @@
                             position: 'top',
                             labels: {
                                 color: 'hsl(215, 20%, 65%)',
-                                font: { size: 10, family: 'Inter' }
+                                font: { size: 11, family: 'Inter' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.raw.toLocaleString()} unidades`;
+                                }
                             }
                         }
                     },
                     scales: {
                         x: {
                             grid: { display: false },
-                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                            ticks: { color: 'hsl(215, 20%, 65%)' },
+                            title: {
+                                display: true,
+                                text: 'Prioridad de Abastecimiento',
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 11, family: 'Inter', weight: 'bold' }
+                            }
                         },
                         y: {
                             grid: { color: 'rgba(255,255,255,0.04)' },
-                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                            ticks: { color: 'hsl(215, 20%, 65%)' },
+                            title: {
+                                display: true,
+                                text: 'Stock Promedio (Unidades)',
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 11, family: 'Inter', weight: 'bold' }
+                            }
                         }
                     }
                 }
@@ -1492,8 +1603,18 @@
                             position: 'right',
                             labels: {
                                 color: 'hsl(215, 20%, 65%)',
-                                font: { size: 11, family: 'Inter' },
+                                font: { size: 12, family: 'Inter', weight: '500' },
                                 boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return ` ${context.label}: ${value.toLocaleString()} unidades (${percentage}%)`;
+                                }
                             }
                         }
                     }
@@ -1701,6 +1822,53 @@
             setTimeout(() => {
                 toast.classList.remove('active');
             }, 4000);
+        }
+
+        // -------------------------------------------------------------
+        // MODAL DE DESGLOSE DE ALERTAS DE STOCK CRÍTICO
+        // -------------------------------------------------------------
+        function openAlertsModal() {
+            alertsTableBody.innerHTML = '';
+            
+            // Filtrar elementos que se encuentran por debajo del stock de seguridad
+            const alertItems = allData.filter(item => item.existencia_actual < item.inventario_seguridad);
+            alertModalCount.textContent = alertItems.length;
+            
+            if (alertItems.length === 0) {
+                alertsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">
+                            ✨ No hay alertas de stock activo en este momento. ¡Excelente gestión lograda!
+                        </td>
+                    </tr>
+                `;
+            } else {
+                alertItems.forEach(item => {
+                    const deficit = item.inventario_seguridad - item.existencia_actual;
+                    const tr = document.createElement('tr');
+                    
+                    // Prioridad de estilo
+                    let prioClass = 'badge normal';
+                    if (item.prioridad_abastecimiento === 'ALTA') prioClass = 'badge alert';
+                    
+                    tr.innerHTML = `
+                        <td><strong>📄 ${item.nro_vale || '-'}</strong></td>
+                        <td><span style="font-weight: 500;">📦 ${item.item_material || '-'}</span></td>
+                        <td><span>📍 ${item.frente_o_bodega || '-'}</span></td>
+                        <td><span class="${prioClass}">${item.prioridad_abastecimiento || 'MEDIA'}</span></td>
+                        <td style="text-align: right; font-weight: bold; color: hsl(345, 85%, 70%);">📈 ${item.existencia_actual.toLocaleString()}</td>
+                        <td style="text-align: right; font-weight: 500;">⚠️ ${item.inventario_seguridad.toLocaleString()}</td>
+                        <td style="text-align: right; font-weight: bold; color: var(--danger);">🔻 ${deficit.toLocaleString()}</td>
+                    `;
+                    alertsTableBody.appendChild(tr);
+                });
+            }
+            
+            modalAlertsOverlay.classList.add('active');
+        }
+
+        function closeAlertsModal() {
+            modalAlertsOverlay.classList.remove('active');
         }
     </script>
 </body>
