@@ -1,6 +1,6 @@
 # 🏗️ Dashboard Inteligente de Control de Inventarios para Constructoras
 
-Este es un dashboard premium interactivo y en tiempo real diseñado específicamente para la logística, el control de abastecimiento y la prevención de quiebres de obra en empresas de construcción. La aplicación se conecta de forma nativa a **Google BigQuery** utilizando un backend robusto en Flask (Python) y una interfaz de usuario glassmórfica premium impulsada por **Chart.js** para visualización analítica avanzada.
+Este es un dashboard premium interactivo y en tiempo real diseñado específicamente para la analítica de datos logísticos, control de abastecimiento y prevención de quiebres de obra en empresas de construcción mediante ingesta de datos en tiempo real. La aplicación se conecta de forma nativa a **Google BigQuery** utilizando un backend robusto en Flask (Python) y una interfaz de usuario glassmórfica premium impulsada por **Chart.js** para visualización analítica avanzada.
 
 ---
 
@@ -10,7 +10,7 @@ Para la presentación del proyecto ante evaluadores, el equipo se divide estruct
 
 | 👤 Integrante | 🛠️ Especialidad & Rol | 📋 Temas de Exposición |
 | :--- | :--- | :--- |
-| **Integrante 1** | Líder de Proyecto & Diseñador UX/UI | Introducción del problema logístico, propuesta de valor de negocio, estética Glassmorphic corporativa de alto contraste y baja fatiga visual y simulación interactiva de sensores IoT en el frontend. |
+| **Integrante 1** | Líder de Proyecto & Diseñador UX/UI | Introducción del problema logístico, propuesta de valor de negocio, estética Glassmorphic corporativa de alto contraste y baja fatiga visual y ingesta e integración de flujos de datos de telemetría IoT. |
 | **Integrante 2** | Arquitecto de Software & Backend | Backend en Flask (Python), Gateway API/REST IoT, conector nativo con Google BigQuery y arquitectura de persistencia con doble ruta de respaldo (Streaming + Fallback SQL). |
 | **Integrante 3** | Analista de Datos & Especialista en BI | Dashboards interactivos en Chart.js, análisis estadístico dual (Descriptivo e Inferencial) de las 4 métricas clave e interactividad avanzada Drill-down (clic en barras para abrir detalles). |
 | **Integrante 4** | Ingeniero de DevOps & Cloud Computing | Flujo de control de versiones limpio en Git, contenedorización con Docker, despliegue serverless en Google Cloud Run y seguridad de credenciales IAM de Google Cloud. |
@@ -293,7 +293,7 @@ Este guión interactivo está diseñado para que **4 integrantes** puedan presen
 >
 > **Características clave que diseñamos para la interacción:**
 > 1. **Encabezado Inteligente:** Muestra el logo dinámico y un indicador de estado que verifica síncronamente si la base de datos distribuida en Google BigQuery está conectada.
-> 2. **Simulador de Transmisión de Sensores IoT (Wokwi):** En producción, el stock se actualiza automáticamente mediante dispositivos físicos (como básculas, lectores RFID o escáneres de código de barras basados en **ESP32** simulados en **Wokwi**). Para la demostración en vivo, diseñamos un panel interactivo que modela de forma idéntica esta telemetría IoT: al activarse, permite simular la transmisión de una trama de datos de sensor mediante un protocolo POST en caliente a nuestra pasarela analítica, calculando de forma automática el stock y disparando el estado de disponibilidad del material.
+> 2. **Ingesta y Simulación de Telemetría IoT en Tiempo Real:** En producción, el inventario se nutre de flujos continuos de datos provenientes de dispositivos de telemetría en bodega (como balanzas inteligentes, arcos RFID o escáneres automáticos). Para la demostración en vivo, diseñamos un panel interactivo de ingesta de datos en tiempo real que modela esta transmisión de paquetes JSON mediante peticiones HTTP POST cifradas directo a nuestra API backend, validando la persistencia inmediata en BigQuery.
 > 3. **NUEVA FUNCIONALIDAD - Modal de Desglose de Alertas:** A petición del negocio, implementamos interactividad directa en la tarjeta de alertas. Al hacer clic sobre el card de 'Frentes Activos' que avisa la existencia de stock crítico (por ejemplo, las 54 alertas activas), la interfaz abre un **modal premium translúcido** con el desglose detallado en tiempo real. Esta tabla muestra el número de vale, el material específico, su ubicación (bodega/frente), prioridad, stock actual, stock de seguridad y el **déficit exacto** de unidades faltantes para activar la orden de compra urgente. 
 > 
 > *Le cedo la palabra a mi compañero para explicar la arquitectura de datos."*
@@ -313,7 +313,7 @@ Este guión interactivo está diseñado para que **4 integrantes** puedan presen
 > 3. `/api/stats`: Realiza consultas de agregación analítica de alta velocidad en BigQuery para alimentar el motor de gráficos en el frontend.
 >
 > **Arquitectura de Ingestión Resiliente para Dispositivos IoT:**
-> *Al momento de recibir telemetría IoT desde Wokwi, implementamos una lógica híbrida de tolerancia a fallos única para manejar el flujo continuo de sensores:*
+> *Al momento de recibir flujos de telemetría IoT, implementamos una lógica híbrida de tolerancia a fallos única para manejar el flujo continuo de sensores:*
 > *   *Primero, intentamos insertar el registro mediante **Streaming Ingestion (`insert_rows_json`)** para lograr disponibilidad inmediata en el buffer de BigQuery.*
 > *   *Si la API de BigQuery rechaza la ráfaga de streaming temporalmente por límites de cuota de propagación en la tabla analítica, el backend activa automáticamente un **Fallback a DML tradicional**, ejecutando un Job de inserción directa (`INSERT INTO ... VALUES`). Esto garantiza un **100% de persistencia de datos** de telemetría ante cualquier eventualidad de concurrencia.*
 >

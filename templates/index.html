@@ -980,7 +980,7 @@
                         <line x1="6" y1="6" x2="6.01" y2="6"></line>
                         <line x1="6" y1="18" x2="6.01" y2="18"></line>
                     </svg>
-                    Simular Sensor IoT Wokwi
+                    Simulador de Telemetría IoT
                 </button>
             </div>
 
@@ -1033,12 +1033,12 @@
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-card">
             <div class="modal-header" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%);">
-                <h2>🛰️ Transmisor de Telemetría IoT (Simulador Wokwi ESP32)</h2>
+                <h2>🛰️ Ingesta de Telemetría IoT en Tiempo Real</h2>
                 <button class="close-btn" id="btnCloseModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="background: rgba(14, 165, 233, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(14, 165, 233, 0.15); margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.45;">
-                    <strong>📡 Nota de Integración IoT Wokwi:</strong> En producción, esta ingesta ocurre automáticamente desde microcontroladores **ESP32** simulados en **Wokwi** mediante llamadas POST HTTP cifradas directas a nuestra API `/api/data`. Utiliza este panel para **simular una transmisión de sensor IoT** en vivo y validar el procesamiento en Google BigQuery en tiempo real.
+                    <strong>📡 Nota de Integración IoT Wokwi:</strong> En producción, esta ingesta de datos ocurre automáticamente desde sensores físicos de telemetría en bodega (lectores RFID, balanzas automáticas) mediante llamadas POST HTTP cifradas directas a nuestra API `/api/data`. Utiliza este panel para **simular una transmisión de sensor IoT** en vivo y validar el procesamiento en Google BigQuery en tiempo real.
                 </div>
                 <form id="inventoryForm">
                     <div class="form-grid">
@@ -1136,7 +1136,7 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="btnCancelModal">Cancelar</button>
                 <button class="btn" id="btnSaveData" style="background: linear-gradient(135deg, hsl(200, 85%, 45%) 0%, hsl(215, 80%, 35%) 100%);">
-                    <span id="btnText">⚡ Transmitir Telemetría IoT (POST)</span>
+                    <span id="btnText">⚡ Ingestar Flujo de Datos IoT (POST)</span>
                 </button>
             </div>
         </div>
@@ -1792,7 +1792,7 @@
             document.getElementById('fecha_registro').value = today;
             // Limpiar spinner en botón guardar si se quedó colgado
             btnSaveData.disabled = false;
-            btnSaveData.innerHTML = `<span id="btnText">⚡ Transmitir Telemetría IoT (POST)</span>`;
+            btnSaveData.innerHTML = `<span id="btnText">⚡ Ingestar Flujo de Datos IoT (POST)</span>`;
         }
 
         // Enviar datos del formulario al Backend
@@ -1837,7 +1837,7 @@
                 const result = await response.json();
                 
                 if (response.ok) {
-                    showToast(result.message || '¡Telemetría IoT transmitida y procesada correctamente en BigQuery!', 'success');
+                    showToast(result.message || '¡Flujo de datos IoT ingresado y procesado correctamente en BigQuery!', 'success');
                     closeModal();
                     // Refrescar todos los datos del dashboard en tiempo real
                     await refreshDashboardData();
@@ -1850,7 +1850,7 @@
                 
                 // Devolver botón a su estado normal
                 btnSaveData.disabled = false;
-                btnSaveData.innerHTML = `<span id="btnText">⚡ Transmitir Telemetría IoT (POST)</span>`;
+                btnSaveData.innerHTML = `<span id="btnText">⚡ Ingestar Flujo de Datos IoT (POST)</span>`;
             }
         }
 
