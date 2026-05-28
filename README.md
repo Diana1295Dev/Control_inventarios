@@ -250,7 +250,7 @@ Este guión interactivo está diseñado para que **4 integrantes** puedan presen
 > 3. *Realizamos el despliegue serverless en **Google Cloud Run**.*
 >
 > **Configuración de Permisos IAM Seguros en Producción:**
-> *Al desplegar en Cloud Run, resolvemos las conexiones a BigQuery de forma óptima. En lugar de empotrar archivos JSON de credenciales, le otorgamos a la **Service Account de Compute por defecto** de Cloud Run los roles de **BigQuery Data Editor** y **BigQuery Job User** en la consola IAM de GCP. De esta forma, el contenedor hereda los privilegios dinámicamente y se conecta de manera directa e impenetrable.*
+> *Al desplegar en Cloud Run, resolvemos las conexiones a BigQuery de forma óptima. En lugar de adjuntar archivos JSON de credenciales, le otorgamos a la **Service Account de Compute por defecto** de Cloud Run los roles de **BigQuery Data Editor** y **BigQuery Job User** en la consola IAM de GCP. De esta forma, el contenedor hereda los privilegios dinámicamente y se conecta de manera directa e impenetrable.*
 >
 > *Con esto, concluimos nuestra exposición. Hemos entregado una solución integral: interactiva, analítica, altamente resiliente en BigQuery y automatizada en la nube. Quedamos atentos a sus preguntas. Muchas gracias."*
 
