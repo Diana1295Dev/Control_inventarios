@@ -4,6 +4,19 @@ Este es un dashboard premium interactivo y en tiempo real diseñado específicam
 
 ---
 
+## 👥 Estructura del Equipo de Exposición y Roles
+
+Para la presentación del proyecto ante evaluadores, el equipo se divide estructuradamente en **4 integrantes** desde el inicio, cada uno enfocado en un pilar clave del desarrollo técnico:
+
+| 👤 Integrante | 🛠️ Especialidad & Rol | 📋 Temas de Exposición |
+| :--- | :--- | :--- |
+| **Integrante 1** | Líder de Proyecto & Diseñador UX/UI | Introducción del problema logístico, propuesta de valor de negocio, estética Glassmorphic en Modo Oscuro y simulación interactiva de sensores IoT en el frontend. |
+| **Integrante 2** | Arquitecto de Software & Backend | Backend en Flask (Python), Gateway API/REST IoT, conector nativo con Google BigQuery y arquitectura de persistencia con doble ruta de respaldo (Streaming + Fallback SQL). |
+| **Integrante 3** | Analista de Datos & Especialista en BI | Dashboards interactivos en Chart.js, análisis estadístico dual (Descriptivo e Inferencial) de las 4 métricas clave e interactividad avanzada Drill-down (clic en barras para abrir detalles). |
+| **Integrante 4** | Ingeniero de DevOps & Cloud Computing | Flujo de control de versiones limpio en Git, contenedorización con Docker, despliegue serverless en Google Cloud Run y seguridad de credenciales IAM de Google Cloud. |
+
+---
+
 ## 📊 Propuesta de Valor y Métricas de Negocio (Business Intelligence)
 
 En una empresa constructora, el desabastecimiento de materiales críticos (cemento, acero, tuberías, aditivos) puede paralizar frentes de obra enteros, ocasionando pérdidas financieras monumentales por retrasos de maquinaria y mano de obra. 
