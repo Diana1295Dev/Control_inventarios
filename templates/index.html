@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Almacén - Constructora</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js para visualización -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* -------------------------------------------------------------
+           SISTEMA DE DISEÑO & VARIABLES (PALETA DE COLORES PREMIUM)
+           ------------------------------------------------------------- */
+        :root {
+            --bg-gradient: linear-gradient(135deg, hsl(222, 47%, 11%) 0%, hsl(224, 71%, 4%) 100%);
+            --glass-bg: rgba(30, 41, 59, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-focus: rgba(99, 102, 241, 0.4);
+            
+            --text-primary: hsl(210, 38%, 95%);
+            --text-secondary: hsl(215, 20%, 65%);
+            --text-muted: hsl(215, 16%, 47%);
+            
+            --primary: hsl(250, 89%, 65%);
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --secondary: hsl(180, 100%, 45%);
+            --secondary-glow: rgba(6, 182, 212, 0.15);
+            
+            --success: hsl(145, 80%, 45%);
+            --success-glow: rgba(16, 185, 129, 0.15);
+            --warning: hsl(35, 92%, 55%);
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --danger: hsl(345, 85%, 55%);
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* -------------------------------------------------------------
+           RESETS Y ESTILOS BASE
+           ------------------------------------------------------------- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--glass-border) transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        h1, h2, h3, .brand-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        /* -------------------------------------------------------------
+           DISEÑO DE CONTENEDORES & MAQUETADO
+           ------------------------------------------------------------- */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-logo {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .brand-logo svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        .brand-text h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #fff 30%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* -------------------------------------------------------------
+           CONEXIÓN ESTADO BAR
+           ------------------------------------------------------------- */
+        .status-badge {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            box-shadow: var(--shadow-premium);
+            transition: var(--transition-smooth);
+            cursor: pointer;
+        }
+
+        .status-badge:hover {
+            border-color: var(--glass-border-focus);
+            transform: translateY(-2px);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.connected {
+            background-color: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse-green 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background-color: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+            animation: pulse-red 2s infinite;
+        }
+
+        .status-dot.checking {
+            background-color: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+            animation: pulse-yellow 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* -------------------------------------------------------------
+           TARJETAS KPIS (MÉTRICAS CLAVE)
+           ------------------------------------------------------------- */
+        .kpis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .kpi-card.blue::before { background: var(--primary); }
+        .kpi-card.cyan::before { background: var(--secondary); }
+        .kpi-card.green::before { background: var(--success); }
+        .kpi-card.amber::before { background: var(--warning); }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .kpi-card.alert-active {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.45) 0%, rgba(239, 68, 68, 0.05) 100%);
+        }
+
+        .kpi-info h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .kpi-card.blue .kpi-icon { background: var(--primary-glow); color: var(--primary); }
+        .kpi-card.cyan .kpi-icon { background: var(--secondary-glow); color: var(--secondary); }
+        .kpi-card.green .kpi-icon { background: var(--success-glow); color: var(--success); }
+        .kpi-card.amber .kpi-icon { background: var(--warning-glow); color: var(--warning); }
+
+        /* -------------------------------------------------------------
+           SECCIÓN DE GRÁFICOS
+           ------------------------------------------------------------- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-premium);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+            width: 100%;
+        }
+
+        /* -------------------------------------------------------------
+           CONTROLES DE DATOS (BÚSQUEDA Y ACCIONES)
+           ------------------------------------------------------------- */
+        .data-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .search-input:focus {
+            border-color: var(--glass-border-focus);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            width: 16px;
+            height: 16px;
+        }
+
+        .filter-select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .filter-select:focus {
+            border-color: var(--glass-border-focus);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, hsl(260, 95%, 68%) 100%);
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+            transition: var(--transition-smooth);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* -------------------------------------------------------------
+           TABLA DE DATOS PREMIUM
+           ------------------------------------------------------------- */
+        .table-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-premium);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.88rem;
+        }
+
+        thead {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 1rem 0.75rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            cursor: help;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+
+        th:hover {
+            color: var(--primary);
+        }
+
+        td {
+            padding: 1rem 0.75rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            white-space: nowrap;
+            cursor: pointer;
+            position: relative;
+        }
+
+        td span {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        td:hover span {
+            transform: scale(1.05);
+        }
+
+        tr {
+            transition: var(--transition-smooth);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge.alert {
+            background: rgba(239, 68, 68, 0.15);
+            color: hsl(0, 100%, 75%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge.normal {
+            background: rgba(16, 185, 129, 0.15);
+            color: hsl(145, 80%, 70%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .stock-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .stock-indicator-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .stock-indicator-dot.alert {
+            background: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+        }
+
+        .stock-indicator-dot.normal {
+            background: var(--success);
+        }
+
+        tr.row-warning td {
+            background: rgba(239, 68, 68, 0.03);
+        }
+
+        /* -------------------------------------------------------------
+           PAGINACIÓN
+           ------------------------------------------------------------- */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pagination-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-pagination {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-pagination:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--glass-border-focus);
+            color: #fff;
+        }
+
+        .btn-pagination:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* -------------------------------------------------------------
+           ESTILO DEL MODAL (FORMULARIO REGISTRO)
+           ------------------------------------------------------------- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(8, 10, 16, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-card {
+            background: hsl(223, 30%, 12%);
+            border: 1px solid var(--glass-border);
+            width: 90%;
+            max-width: 750px;
+            max-height: 90vh;
+            border-radius: 20px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 600px) {
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .required::after {
+            content: ' *';
+            color: var(--danger);
+        }
+
+        .form-control {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.7rem 0.9rem;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .form-control:focus {
+            border-color: var(--glass-border-focus);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.15);
+        }
+
+        .math-helper-box {
+            grid-column: span 2;
+            background: rgba(99, 102, 241, 0.06);
+            border: 1px dashed rgba(99, 102, 241, 0.25);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 600px) {
+            .math-helper-box {
+                grid-column: span 1;
+            }
+        }
+
+        .math-helper-btn {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: hsl(240, 100%, 75%);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition-smooth);
+        }
+
+        .math-helper-btn:hover {
+            background: rgba(99, 102, 241, 0.3);
+            color: #fff;
+        }
+
+        .modal-footer {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            box-shadow: none;
+        }
+
+        /* -------------------------------------------------------------
+           SPINNER DE CARGA / ALERTS
+           ------------------------------------------------------------- */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notificación Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: hsl(223, 30%, 12%);
+            border-left: 4px solid var(--primary);
+            border-top: 1px solid var(--glass-border);
+            border-right: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 2000;
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.active {
+            transform: translateY(0);
+        }
+
+        .toast.success { border-left-color: var(--success); }
+        .toast.danger { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- CABECERA -->
+        <header>
+            <div class="brand-section">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Gestión de Almacén</h1>
+                    <p>Sistema de Inventario en Tiempo Real</p>
+                </div>
+            </div>
+            
+            <div class="status-badge" id="btnCheckStatus" title="Haga clic para verificar de nuevo la conexión">
+                <span class="status-dot checking" id="statusDot"></span>
+                <span id="statusText">Verificando conexión...</span>
+            </div>
+        </header>
+
+        <!-- GRID DE KPIS (METRICAS DE NEGOCIO - LOGISTICA DE CONSTRUCCION) -->
+        <div class="kpis-grid">
+            
+            <div class="kpi-card blue">
+                <div class="kpi-info">
+                    <h3>Total Movimientos</h3>
+                    <div class="kpi-value" id="kpiTotalTrans">--</div>
+                </div>
+                <div class="kpi-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="kpi-card cyan">
+                <div class="kpi-info">
+                    <h3>Stock Total Obra</h3>
+                    <div class="kpi-value" id="kpiStockTotal">--</div>
+                </div>
+                <div class="kpi-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="kpi-card green">
+                <div class="kpi-info">
+                    <h3>Nivel de Servicio Obra</h3>
+                    <div class="kpi-value" id="kpiNivelServicio">--</div>
+                </div>
+                <div class="kpi-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="kpi-card amber" id="kpiAlertCard">
+                <div class="kpi-info">
+                    <h3>Frentes Activos</h3>
+                    <div class="kpi-value">
+                        <span id="kpiFrentesActivos">--</span>
+                        <span style="font-size: 0.85rem; font-weight: 600; margin-left: 0.4rem;" id="kpiStockAlertsText">(-- Alertas)</span>
+                    </div>
+                </div>
+                <div class="kpi-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    </svg>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GRID DE GRÁFICOS AVANZADOS (BUSINESS INTELLIGENCE) -->
+        <div class="charts-grid">
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Salud del Inventario (Riesgo de Quiebre)
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartSalud"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        Consumo por Frente de Obra / Proyecto (Top 5)
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartFrentes"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        Brecha de Stock de Seguridad por Prioridad
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartPrioridades"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Balance Logístico (Entradas vs. Salidas)
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartFlujo"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECCIÓN DE LA TABLA Y CONTROLES -->
+        <div class="table-card">
+            
+            <div class="data-controls">
+                <div class="search-wrapper">
+                    <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" id="inputSearch" placeholder="Buscar por material o vale...">
+                </div>
+                
+                <select class="filter-select" id="selectFamiliaFilter">
+                    <option value="">Todas las familias</option>
+                </select>
+                
+                <button class="btn" id="btnOpenModal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Registrar Movimiento
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th title="Número único del vale de movimiento">📄 Vale</th>
+                            <th title="Fecha del registro del movimiento">📅 Fecha</th>
+                            <th title="Descripción del material">📦 Material</th>
+                            <th title="Familia o categoría del material">🏷️ Familia</th>
+                            <th title="Tipo de movimiento (Entrada/Salida)">↕️ Flujo</th>
+                            <th title="Cantidad movida en la transacción">🔢 Cantidad</th>
+                            <th title="Stock existente antes del movimiento">📊 Stock Anterior</th>
+                            <th title="Stock existente después del movimiento">📈 Stock Actual</th>
+                            <th title="Stock mínimo de seguridad requerido">⚠️ Seg. Mín.</th>
+                            <th title="Estado actual del material en almacén">✅ Estado</th>
+                            <th title="Ubicación del material (bodega/frente)">📍 Ubicación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="11" style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">
+                                <div class="spinner" style="margin-bottom: 0.5rem;"></div>
+                                <p>Cargando datos de BigQuery...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINACIÓN -->
+            <div class="pagination-container">
+                <div class="pagination-info" id="paginationInfo">
+                    Mostrando 0 a 0 de 0 registros
+                </div>
+                <div class="pagination-buttons">
+                    <button class="btn-pagination" id="btnPrevPage" disabled>Anterior</button>
+                    <button class="btn-pagination" id="btnNextPage" disabled>Siguiente</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- -----------------------------------------------------------------
+         MODAL DE REGISTRO DE INVENTARIO
+         ----------------------------------------------------------------- -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Registrar Movimiento de Inventario</h2>
+                <button class="close-btn" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="inventoryForm">
+                    <div class="form-grid">
+                        
+                        <!-- Primera Fila -->
+                        <div class="form-group">
+                            <label class="required" for="nro_vale">Nro. Vale</label>
+                            <input type="text" id="nro_vale" class="form-control" placeholder="Ej. VALE-1002" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="fecha_registro">Fecha Registro</label>
+                            <input type="date" id="fecha_registro" class="form-control" required>
+                        </div>
+
+                        <!-- Segunda Fila (Completa) -->
+                        <div class="form-group full-width">
+                            <label class="required" for="item_material">Item Material (Código / Descripción)</label>
+                            <input type="text" id="item_material" class="form-control" placeholder="Ej. TUBO PVC 1/2 CONECTOR CON ROSCA" required>
+                        </div>
+
+                        <!-- Tercera Fila -->
+                        <div class="form-group">
+                            <label for="familia_material">Familia Material</label>
+                            <input type="text" id="familia_material" class="form-control" placeholder="Ej. TUBERIA / ACCESORIOS">
+                        </div>
+                        <div class="form-group">
+                            <label for="flujo_almacen">Flujo Almacén</label>
+                            <input type="text" id="flujo_almacen" class="form-control" placeholder="Ej. ENTRADA / SALIDA">
+                        </div>
+
+                        <!-- Ayudante Matemático -->
+                        <div class="math-helper-box">
+                            <span>💡 ¿Quieres autocalcular la Existencia Actual?</span>
+                            <button type="button" class="math-helper-btn" id="btnCalcStock">Calcular Stock</button>
+                        </div>
+
+                        <!-- Cuarta Fila (Números) -->
+                        <div class="form-group">
+                            <label for="cantidad_transaccion">Cantidad Transacción</label>
+                            <input type="number" id="cantidad_transaccion" class="form-control" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="existencia_anterior">Existencia Anterior</label>
+                            <input type="number" id="existencia_anterior" class="form-control" value="0">
+                        </div>
+
+                        <!-- Quinta Fila -->
+                        <div class="form-group">
+                            <label class="required" for="existencia_actual">Existencia Actual (Final)</label>
+                            <input type="number" id="existencia_actual" class="form-control" placeholder="Obligatorio" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="inventario_seguridad">Inventario Seguridad (Mínimo)</label>
+                            <input type="number" id="inventario_seguridad" class="form-control" value="0">
+                        </div>
+
+                        <!-- Sexta Fila -->
+                        <div class="form-group">
+                            <label for="estado_disponibilidad">Estado Disponibilidad</label>
+                            <select id="estado_disponibilidad" class="form-control">
+                                <option value="DISPONIBLE">DISPONIBLE</option>
+                                <option value="STOCK MINIMO">STOCK MINIMO</option>
+                                <option value="AGOTADO">AGOTADO</option>
+                                <option value="RESERVADO">RESERVADO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="frente_o_bodega">Frente o Bodega</label>
+                            <input type="text" id="frente_o_bodega" class="form-control" placeholder="Ej. BODEGA CENTRAL">
+                        </div>
+
+                        <!-- Séptima Fila -->
+                        <div class="form-group">
+                            <label for="unidad_control">Unidad Control</label>
+                            <input type="text" id="unidad_control" class="form-control" placeholder="Ej. UNIDAD / METROS">
+                        </div>
+                        <div class="form-group">
+                            <label for="prioridad_abastecimiento">Prioridad Abastecimiento</label>
+                            <select id="prioridad_abastecimiento" class="form-control">
+                                <option value="ALTA">ALTA</option>
+                                <option value="MEDIA">MEDIA</option>
+                                <option value="BAJA">BAJA</option>
+                            </select>
+                        </div>
+
+                        <!-- Octava Fila (Completa) -->
+                        <div class="form-group full-width">
+                            <label for="concepto_logitico">Concepto Logístico</label>
+                            <input type="text" id="concepto_logitico" class="form-control" placeholder="Ej. ABASTECIMIENTO DE FRENTE">
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btnCancelModal">Cancelar</button>
+                <button class="btn" id="btnSaveData">
+                    <span id="btnText">Guardar Registro</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST DE NOTIFICACIONES -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">Operación realizada con éxito</span>
+    </div>
+
+    <!-- -----------------------------------------------------------------
+         LÓGICA JAVASCRIPT FRONTEND
+         ----------------------------------------------------------------- -->
+    <script>
+        // Estado Global del Frontend
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        
+        // Variables de Gráficos (instancias de Chart.js - Business Intelligence)
+        let chartSaludInstance = null;
+        let chartFrentesInstance = null;
+        let chartPrioridadesInstance = null;
+        let chartFlujoInstance = null;
+
+        // Elementos del DOM
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const btnCheckStatus = document.getElementById('btnCheckStatus');
+        
+        const kpiTotalTrans = document.getElementById('kpiTotalTrans');
+        const kpiStockTotal = document.getElementById('kpiStockTotal');
+        const kpiNivelServicio = document.getElementById('kpiNivelServicio');
+        const kpiFrentesActivos = document.getElementById('kpiFrentesActivos');
+        const kpiStockAlertsText = document.getElementById('kpiStockAlertsText');
+        const kpiAlertCard = document.getElementById('kpiAlertCard');
+        
+        const inputSearch = document.getElementById('inputSearch');
+        const selectFamiliaFilter = document.getElementById('selectFamiliaFilter');
+        const tableBody = document.getElementById('tableBody');
+        
+        const paginationInfo = document.getElementById('paginationInfo');
+        const btnPrevPage = document.getElementById('btnPrevPage');
+        const btnNextPage = document.getElementById('btnNextPage');
+        
+        const modalOverlay = document.getElementById('modalOverlay');
+        const btnOpenModal = document.getElementById('btnOpenModal');
+        const btnCloseModal = document.getElementById('btnCloseModal');
+        const btnCancelModal = document.getElementById('btnCancelModal');
+        const btnSaveData = document.getElementById('btnSaveData');
+        const inventoryForm = document.getElementById('inventoryForm');
+        
+        const btnCalcStock = document.getElementById('btnCalcStock');
+        const toast = document.getElementById('toast');
+
+        // Inicialización al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pre-llenar fecha en el formulario (hoy)
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha_registro').value = today;
+
+            // Enlazar Eventos
+            btnCheckStatus.addEventListener('click', checkConnectionStatus);
+            inputSearch.addEventListener('input', applyFilters);
+            selectFamiliaFilter.addEventListener('change', applyFilters);
+            
+            btnPrevPage.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); } });
+            btnNextPage.addEventListener('click', () => { if (currentPage * rowsPerPage < filteredData.length) { currentPage++; renderTable(); } });
+            
+            btnOpenModal.addEventListener('click', () => modalOverlay.classList.add('active'));
+            btnCloseModal.addEventListener('click', closeModal);
+            btnCancelModal.addEventListener('click', closeModal);
+            btnSaveData.addEventListener('click', submitForm);
+            
+            btnCalcStock.addEventListener('click', autocalculateStock);
+
+            // Cargas iniciales
+            checkConnectionStatus();
+            refreshDashboardData();
+        });
+
+        // -------------------------------------------------------------
+        // COMUNICACIÓN CON API BACKEND
+        // -------------------------------------------------------------
+
+        // Verificar el estado de BigQuery
+        async function checkConnectionStatus() {
+            statusDot.className = 'status-dot checking';
+            statusText.innerText = 'Verificando conexión...';
+            
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                if (data.status === 'connected') {
+                    statusDot.className = 'status-dot connected';
+                    statusText.innerText = 'BigQuery: Conectado';
+                    statusText.title = `Proyecto: ${data.config.project_id}\nDataset: ${data.config.dataset_id}\nTabla: ${data.config.table_id}`;
+                } else {
+                    statusDot.className = 'status-dot disconnected';
+                    statusText.innerText = 'BigQuery: Error de Conexión';
+                    statusText.title = data.message;
+                    showToast(data.message, 'danger');
+                }
+            } catch (error) {
+                statusDot.className = 'status-dot disconnected';
+                statusText.innerText = 'API Backend Desconectada';
+                showToast('No se pudo contactar al backend Flask.', 'danger');
+            }
+        }
+
+        // Cargar todos los datos y actualizar KPIs y Gráficos
+        async function refreshDashboardData() {
+            try {
+                // Obtener datos
+                const dataResponse = await fetch('/api/data?limit=150');
+                if (!dataResponse.ok) throw new Error('Error al obtener datos');
+                allData = await dataResponse.json();
+                
+                // Obtener estadísticas agregadas
+                const statsResponse = await fetch('/api/stats');
+                if (!statsResponse.ok) throw new Error('Error al obtener estadísticas');
+                const stats = await statsResponse.json();
+
+                // 1. Actualizar KPIs
+                updateKPIs(stats.kpis);
+                
+                // 2. Poblar selector de familias
+                populateFamiliesSelector();
+
+                // 3. Renderizar gráficos
+                renderCharts(stats);
+
+                // 4. Aplicar filtros iniciales y poblar tabla
+                applyFilters();
+
+            } catch (error) {
+                console.error(error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="11" style="text-align: center; color: var(--danger); padding: 3rem 0;">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem;" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <p>Error al cargar datos desde BigQuery. Verifica la conexión y el esquema.</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // RENDERIZADO DE COMPONENTES
+        // -------------------------------------------------------------
+
+        // Actualizar valores de las tarjetas de métricas con indicadores avanzados
+        function updateKPIs(kpis) {
+            kpiTotalTrans.innerText = kpis.total_transacciones.toLocaleString();
+            kpiStockTotal.innerText = kpis.stock_total.toLocaleString();
+            kpiNivelServicio.innerText = kpis.nivel_servicio.toFixed(1) + '%';
+            kpiFrentesActivos.innerText = kpis.frentes_activos.toLocaleString();
+            kpiStockAlertsText.innerText = `(${kpis.alertas_stock} Alertas)`;
+            
+            // Si hay alertas de stock críticas, hacer parpadear sutilmente la tarjeta
+            if (kpis.alertas_stock > 0) {
+                kpiAlertCard.classList.add('alert-active');
+                kpiStockAlertsText.style.color = 'var(--danger)';
+            } else {
+                kpiAlertCard.classList.remove('alert-active');
+                kpiStockAlertsText.style.color = 'var(--text-secondary)';
+            }
+        }
+
+        // Rellenar dinámicamente el combo de familias
+        function populateFamiliesSelector() {
+            const familias = [...new Set(allData.map(item => item.familia_material).filter(Boolean))];
+            selectFamiliaFilter.innerHTML = '<option value="">Todas las familias</option>';
+            familias.sort().forEach(fam => {
+                const opt = document.createElement('option');
+                opt.value = fam;
+                opt.textContent = fam;
+                selectFamiliaFilter.appendChild(opt);
+            });
+        }
+
+        // Renderizar los gráficos usando Chart.js (Business Intelligence de Construcción)
+        function renderCharts(stats) {
+            // Destruir gráficos anteriores para evitar fugas de memoria
+            if (chartSaludInstance) chartSaludInstance.destroy();
+            if (chartFrentesInstance) chartFrentesInstance.destroy();
+            if (chartPrioridadesInstance) chartPrioridadesInstance.destroy();
+            if (chartFlujoInstance) chartFlujoInstance.destroy();
+
+            // Gráfico 1: Dona - Salud del Inventario (Riesgo de Quiebre / Stockout)
+            const ctxSalud = document.getElementById('chartSalud').getContext('2d');
+            const saludLabels = stats.salud.map(s => s.estado);
+            const saludData = stats.salud.map(s => s.cantidad);
+            
+            const saludColors = saludLabels.map(label => {
+                if (label.includes('Crítico')) return 'hsl(345, 85%, 55%)';
+                if (label.includes('Riesgo')) return 'hsl(35, 92%, 55%)';
+                return 'hsl(145, 80%, 45%)';
+            });
+
+            chartSaludInstance = new Chart(ctxSalud, {
+                type: 'doughnut',
+                data: {
+                    labels: saludLabels,
+                    datasets: [{
+                        data: saludData,
+                        backgroundColor: saludColors,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.08)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 11, family: 'Inter' },
+                                boxWidth: 12
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // Gráfico 2: Barra Horizontal - Consumo por Frente de Obra
+            const ctxFrentes = document.getElementById('chartFrentes').getContext('2d');
+            const frenteLabels = stats.frentes.map(f => f.frente);
+            const frenteData = stats.frentes.map(f => f.stock);
+
+            chartFrentesInstance = new Chart(ctxFrentes, {
+                type: 'bar',
+                data: {
+                    labels: frenteLabels,
+                    datasets: [{
+                        label: 'Materiales Asignados',
+                        data: frenteData,
+                        backgroundColor: 'rgba(6, 182, 212, 0.4)',
+                        borderColor: 'hsl(180, 100%, 45%)',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico 3: Barra Agrupada - Stock Promedio Real vs. Stock de Seguridad
+            const ctxPrioridades = document.getElementById('chartPrioridades').getContext('2d');
+            const prioLabels = stats.prioridades.map(p => p.prioridad);
+            const prioActual = stats.prioridades.map(p => p.avg_actual);
+            const prioSeguridad = stats.prioridades.map(p => p.avg_seguridad);
+
+            chartPrioridadesInstance = new Chart(ctxPrioridades, {
+                type: 'bar',
+                data: {
+                    labels: prioLabels,
+                    datasets: [
+                        {
+                            label: 'Stock Real Promedio',
+                            data: prioActual,
+                            backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                            borderColor: 'hsl(250, 89%, 65%)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Límite de Seguridad Promedio',
+                            data: prioSeguridad,
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            borderColor: 'hsl(35, 92%, 55%)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            borderDash: [3, 3]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 10, family: 'Inter' }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                            ticks: { color: 'hsl(215, 20%, 65%)' }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico 4: Pay - Balance Logístico (Entradas vs. Salidas)
+            const ctxFlujo = document.getElementById('chartFlujo').getContext('2d');
+            const flujoLabels = stats.flujo.map(f => f.flujo);
+            const flujoData = stats.flujo.map(f => f.volumen);
+
+            chartFlujoInstance = new Chart(ctxFlujo, {
+                type: 'pie',
+                data: {
+                    labels: flujoLabels,
+                    datasets: [{
+                        data: flujoData,
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.4)',
+                            'rgba(239, 68, 68, 0.4)',
+                            'rgba(255, 255, 255, 0.15)'
+                        ],
+                        borderColor: [
+                            'hsl(145, 80%, 45%)',
+                            'hsl(345, 85%, 55%)',
+                            'rgba(255,255,255,0.2)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: 'hsl(215, 20%, 65%)',
+                                font: { size: 11, family: 'Inter' },
+                                boxWidth: 12
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Aplicar filtros de Búsqueda y Familia
+        function applyFilters() {
+            const searchVal = inputSearch.value.toLowerCase().trim();
+            const familiaVal = selectFamiliaFilter.value;
+            
+            filteredData = allData.filter(item => {
+                const matchesSearch = !searchVal || 
+                    (item.item_material && item.item_material.toLowerCase().includes(searchVal)) || 
+                    (item.nro_vale && item.nro_vale.toLowerCase().includes(searchVal));
+                
+                const matchesFamilia = !familiaVal || 
+                    (item.familia_material && item.familia_material === familiaVal);
+                
+                return matchesSearch && matchesFamilia;
+            });
+            
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Dibujar tabla de datos filtrada
+        function renderTable() {
+            tableBody.innerHTML = '';
+            
+            if (filteredData.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="11" style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">
+                            No se encontraron registros de inventario.
+                        </td>
+                    </tr>
+                `;
+                paginationInfo.innerText = 'Mostrando 0 a 0 de 0 registros';
+                btnPrevPage.disabled = true;
+                btnNextPage.disabled = true;
+                return;
+            }
+
+            // Calcular paginación
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredData.length);
+            const paginatedRows = filteredData.slice(startIndex, endIndex);
+            
+            paginatedRows.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                // Si la existencia actual es menor al inventario de seguridad, alertar
+                const isUnderSafety = row.existencia_actual < row.inventario_seguridad;
+                if (isUnderSafety) {
+                    tr.className = 'row-warning';
+                }
+
+                tr.innerHTML = `
+                    <td><strong title="Número del Vale">📄 ${row.nro_vale || '-'}</strong></td>
+                    <td title="Fecha del Registro">📅 ${row.fecha_registro || '-'}</td>
+                    <td title="${row.item_material || ''}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                        <span title="Descripción del Material">📦 ${row.item_material || '-'}</span>
+                    </td>
+                    <td title="Familia o Categoría"><span>🏷️ ${row.familia_material || '-'}</span></td>
+                    <td title="Tipo de Movimiento (Entrada/Salida)"><span>↕️ ${row.flujo_almacen || '-'}</span></td>
+                    <td title="Cantidad en Transacción"><span>🔢 ${row.cantidad_transaccion !== null ? row.cantidad_transaccion.toLocaleString() : '0'}</span></td>
+                    <td title="Stock Anterior"><span>📊 ${row.existencia_anterior !== null ? row.existencia_anterior.toLocaleString() : '0'}</span></td>
+                    <td>
+                        <div class="stock-indicator" title="Stock Actual">
+                            <span class="stock-indicator-dot ${isUnderSafety ? 'alert' : 'normal'}"></span>
+                            <strong>📈 ${row.existencia_actual !== null ? row.existencia_actual.toLocaleString() : '0'}</strong>
+                        </div>
+                    </td>
+                    <td title="Stock Mínimo de Seguridad"><span>⚠️ ${row.inventario_seguridad !== null ? row.inventario_seguridad.toLocaleString() : '0'}</span></td>
+                    <td title="Estado Actual del Material">
+                        <span class="badge ${isUnderSafety ? 'alert' : 'normal'}">
+                            ${row.estado_disponibilidad || (isUnderSafety ? 'Stock Crítico' : 'Disponible')}
+                        </span>
+                    </td>
+                    <td title="Ubicación del Material"><span>📍 ${row.frente_o_bodega || '-'}</span></td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            // Actualizar botones y textos de paginación
+            paginationInfo.innerText = `Mostrando ${startIndex + 1} a ${endIndex} de ${filteredData.length} registros`;
+            btnPrevPage.disabled = currentPage === 1;
+            btnNextPage.disabled = endIndex >= filteredData.length;
+        }
+
+        // Autocalcular stock en base a "Existencia Anterior" y "Cantidad Transacción"
+        function autocalculateStock() {
+            const extAnt = parseInt(document.getElementById('existencia_anterior').value) || 0;
+            const cantTrans = parseInt(document.getElementById('cantidad_transaccion').value) || 0;
+            
+            // Fórmula simple: Existencia Actual = Existencia Anterior + Cantidad Transacción
+            const extAct = extAnt + cantTrans;
+            
+            const fieldAct = document.getElementById('existencia_actual');
+            fieldAct.value = extAct;
+            
+            // Si el stock actual es menor al de seguridad, alertar dinámicamente en el estado
+            const invSeg = parseInt(document.getElementById('inventario_seguridad').value) || 0;
+            const fieldEstado = document.getElementById('estado_disponibilidad');
+            
+            if (extAct <= 0) {
+                fieldEstado.value = 'AGOTADO';
+            } else if (extAct < invSeg) {
+                fieldEstado.value = 'STOCK MINIMO';
+            } else {
+                fieldEstado.value = 'DISPONIBLE';
+            }
+            
+            showToast('Existencia actual autocalculada con éxito', 'success');
+        }
+
+        // -------------------------------------------------------------
+        // OPERACIONES DE ESCRITURA (GUARDAR FORMULARIO)
+        // -------------------------------------------------------------
+
+        // Cerrar modal y limpiar formulario
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            inventoryForm.reset();
+            // Restablecer la fecha de hoy
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha_registro').value = today;
+            // Limpiar spinner en botón guardar si se quedó colgado
+            btnSaveData.disabled = false;
+            btnSaveData.innerHTML = `<span id="btnText">Guardar Registro</span>`;
+        }
+
+        // Enviar datos del formulario al Backend
+        async function submitForm(e) {
+            e.preventDefault();
+            
+            // Validar HTML5
+            if (!inventoryForm.checkValidity()) {
+                inventoryForm.reportValidity();
+                return;
+            }
+
+            // Cambiar botón a estado de carga
+            btnSaveData.disabled = true;
+            btnSaveData.innerHTML = `<span class="spinner"></span> <span style="margin-left: 0.5rem">Guardando...</span>`;
+
+            // Construir payload JSON
+            const payload = {
+                nro_vale: document.getElementById('nro_vale').value,
+                fecha_registro: document.getElementById('fecha_registro').value,
+                item_material: document.getElementById('item_material').value,
+                familia_material: document.getElementById('familia_material').value || null,
+                flujo_almacen: document.getElementById('flujo_almacen').value || null,
+                cantidad_transaccion: parseInt(document.getElementById('cantidad_transaccion').value) || 0,
+                existencia_anterior: parseInt(document.getElementById('existencia_anterior').value) || 0,
+                existencia_actual: parseInt(document.getElementById('existencia_actual').value) || 0,
+                inventario_seguridad: parseInt(document.getElementById('inventario_seguridad').value) || 0,
+                estado_disponibilidad: document.getElementById('estado_disponibilidad').value || null,
+                frente_o_bodega: document.getElementById('frente_o_bodega').value || null,
+                unidad_control: document.getElementById('unidad_control').value || null,
+                prioridad_abastecimiento: document.getElementById('prioridad_abastecimiento').value || null,
+                concepto_logitico: document.getElementById('concepto_logitico').value || null
+            };
+
+            try {
+                const response = await fetch('/api/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast(result.message || '¡Registro guardado correctamente en BigQuery!', 'success');
+                    closeModal();
+                    // Refrescar todos los datos del dashboard en tiempo real
+                    await refreshDashboardData();
+                } else {
+                    throw new Error(result.details || result.error || 'Error al guardar');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast(`Error al guardar: ${error.message}`, 'danger');
+                
+                // Devolver botón a su estado normal
+                btnSaveData.disabled = false;
+                btnSaveData.innerHTML = `<span id="btnText">Guardar Registro</span>`;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // SERVICIO DE NOTIFICACIÓN DE ALERTAS (TOAST)
+        // -------------------------------------------------------------
+        function showToast(message, type = 'success') {
+            const toastMessage = document.getElementById('toastMessage');
+            toast.className = `toast ${type}`;
+            toastMessage.innerText = message;
+            
+            toast.classList.add('active');
+            
+            // Ocultar después de 4 segundos
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
