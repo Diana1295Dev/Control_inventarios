@@ -1876,6 +1876,11 @@
         function openAlertsModal(priorityFilter = null, onlyAlerts = true) {
             alertsTableBody.innerHTML = '';
             
+            // Si el filtro no es un string (ej. es un MouseEvent por el click de la tarjeta), lo limpiamos a null
+            if (priorityFilter && typeof priorityFilter !== 'string') {
+                priorityFilter = null;
+            }
+            
             // Filtrar elementos según el filtro de la gráfica
             let filteredItems = allData;
             
