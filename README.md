@@ -278,91 +278,125 @@ Este panel fue estructurado e implementado con pasión y excelencia técnica por
 
 ---
 
-## 🎤 Guión Explicativo para Exposición (Estructura para 4 Expositores)
+## 🎤 Guion de Exposición – Dashboard Inteligente de Control de Inventarios para Constructoras
 
-Este guión interactivo está diseñado para que **4 integrantes** puedan presentar de forma coordinada, profesional y detallada la solución completa ante evaluadores o clientes. Cada sección aborda un pilar del software (Diseño, Backend, Analítica y DevOps).
+Este guion interactivo está diseñado para que **4 integrantes** puedan presentar de forma coordinada, profesional y detallada la solución completa ante evaluadores o clientes.
 
 ---
 
-### 👤 INTEGRANTE 1: Líder de Proyecto, Diseño UX/UI e Interacción
-**Tema: Introducción, Propuesta de Valor, Diseño Glassmorphism e Interactividad**
+### 👤 INTEGRANTE 1 – Líder de Proyecto, UX/UI y Contexto del Problema
 
-> *"Buenos días a todos. Hoy presentaremos nuestro **Dashboard Inteligente de Control de Inventarios para Constructoras**, una plataforma diseñada para resolver un problema crítico en la industria: **el quiebre de stock de materiales en frentes de obra**, el cual paraliza maquinarias, causa sobrecostos y demora los proyectos civiles.*
->
-> *Mi rol se centró en la dirección del proyecto y el diseño de la interfaz de usuario (UX/UI). Decidimos alejarnos de los diseños tradicionales y genéricos para implementar una estética **Glassmorphism corporativo de alto contraste** de alta gama. Esto se logra mediante fondos translúcidos, filtros de desenfoque (`backdrop-filter: blur`), gradientes sutiles (tonalidades HSL personalizadas en azules y cianes) y micro-animaciones en los componentes.*
->
-> **Características clave que diseñamos para la interacción:**
-> 1. **Encabezado Inteligente:** Muestra el logo dinámico y un indicador de estado que verifica síncronamente si la base de datos distribuida en Google BigQuery está conectada.
-> 2. **Ingesta y Simulación de Telemetría IoT en Tiempo Real:** En producción, el inventario se nutre de flujos continuos de datos provenientes de dispositivos de telemetría en bodega (como balanzas inteligentes, arcos RFID o escáneres automáticos). Para la demostración en vivo, diseñamos un panel interactivo de ingesta de datos en tiempo real que modela esta transmisión de paquetes JSON mediante peticiones HTTP POST cifradas directo a nuestra API backend, validando la persistencia inmediata en BigQuery.
-> 3. **NUEVA FUNCIONALIDAD - Modal de Desglose de Alertas:** A petición del negocio, implementamos interactividad directa en la tarjeta de alertas. Al hacer clic sobre el card de 'Frentes Activos' que avisa la existencia de stock crítico (por ejemplo, las 54 alertas activas), la interfaz abre un **modal premium translúcido** con el desglose detallado en tiempo real. Esta tabla muestra el número de vale, el material específico, su ubicación (bodega/frente), prioridad, stock actual, stock de seguridad y el **déficit exacto** de unidades faltantes para activar la orden de compra urgente. 
+**Tema: Introducción, problemática, propuesta de valor y experiencia de usuario**
+
+> *"Buenos días a todos.
 > 
-> *Le cedo la palabra a mi compañero para explicar la arquitectura de datos."*
-
----
-
-### 👤 INTEGRANTE 2: Arquitecto de Software y Backend
-**Tema: Backend en Flask, Integración Nativa con BigQuery y Mecanismos de Ingesta Resilientes**
-
-> *"Muchas gracias. Para dar vida a este diseño UX, estructuramos un backend altamente optimizado en **Python** utilizando el framework ligero **Flask**.*
->
-> *Nuestra principal meta era asegurar una latencia mínima y una conexión 100% segura con **Google BigQuery**. Para ello, en `app.py` implementamos el SDK oficial de Google Cloud. El sistema utiliza **Application Default Credentials (ADC)** de forma local y hereda la Service Account de forma transparente en la nube, eliminando la necesidad de exponer claves JSON físicas en producción.*
->
-> **Desarrollamos una API interna y Pasarela IoT con 3 endpoints clave:**
-> 1. `/api/status`: Realiza un ping síncrono a BigQuery validando la existencia de la tabla e identificando el ID del proyecto, dataset y tabla.
-> 2. `/api/data`: Recupera de forma paginada y filtrable los últimos registros, y actúa como un **REST IoT Gateway** para procesar las peticiones `POST` enviadas por los microcontroladores ESP32 en Wokwi.
-> 3. `/api/stats`: Realiza consultas de agregación analítica de alta velocidad en BigQuery para alimentar el motor de gráficos en el frontend.
->
-> **Arquitectura de Ingestión Resiliente para Dispositivos IoT:**
-> *Al momento de recibir flujos de telemetría IoT, implementamos una lógica híbrida de tolerancia a fallos única para manejar el flujo continuo de sensores:*
-> *   *Primero, intentamos insertar el registro mediante **Streaming Ingestion (`insert_rows_json`)** para lograr disponibilidad inmediata en el buffer de BigQuery.*
-> *   *Si la API de BigQuery rechaza la ráfaga de streaming temporalmente por límites de cuota de propagación en la tabla analítica, el backend activa automáticamente un **Fallback a DML tradicional**, ejecutando un Job de inserción directa (`INSERT INTO ... VALUES`). Esto garantiza un **100% de persistencia de datos** de telemetría ante cualquier eventualidad de concurrencia.*
->
-> *Ahora, pasaremos a analizar los KPIs y el motor analítico de visualización."*
-
----
-
-### 👤 INTEGRANTE 3: Especialista en Data Analytics y Visualización
-**Tema: Métricas de Negocio (KPIs), Gráficos Estadísticos Clave y Legibilidad de Datos**
-
-> *"Gracias. Mi rol se enfocó en traducir los datos crudos de BigQuery en valor de negocio a través de métricas analíticas e interactividad gráfica impulsada por **Chart.js**.*
->
-> *Hemos definido 4 KPIs principales en el panel superior:*
-> 1. **Total Movimientos:** Volumen histórico de transacciones logísticas.
-> 2. **Stock Total Obra:** Suma absoluta del inventario disponible en toda la organización.
-> 3. **Nivel de Servicio de Obra (%):** Esfera clave que mide qué porcentaje de transacciones operan de forma segura por encima del inventario mínimo.
-> 4. **Frentes Activos & Alertas:** Alerta visual y cuantitativa parpadeante que avisa cuántos materiales críticos requieren compra urgente.
->
-> **Análisis Estadístico y Visualizaciones con Legibilidad de Alto Rendimiento:**
-> *Para cumplir con los estándares más exigentes, rediseñamos los gráficos de Chart.js agregando **etiquetas explícitas de ejes**, **leyendas informativas** y **tooltips interactivos con porcentajes calculados dinámicamente**:*
->
-> 1. **Gráfico 1: Salud del Inventario (Dona):** Categoriza el stock en tres niveles: *Crítico (Quiebre)*, *En Riesgo* y *Saludable*. Su tooltip dinámico muestra la cantidad exacta de materiales en dicho estado y calcula síncronamente su porcentaje frente al total.
-> 2. **Gráfico 2: Consumo por Frente de Obra (Barras Horizontales):** Visualiza los frentes de trabajo o proyectos que concentran la mayor cantidad de recursos. Añadimos títulos claros en los ejes X (*Cantidad en Almacén*) e Y (*Proyectos / Frentes de Obra*) y personalizamos el tooltip para denotar las unidades en stock.
-> 3. **Gráfico 3: Alertas vs. Stock Seguro por Prioridad (Barras Agrupadas con Conteo & Drill-down):** Para evitar la trampa de los promedios y porcentajes abstractos, implementamos un gráfico de barras agrupadas (lado a lado) que muestra de forma **directa la cantidad de materiales en Alerta / Quiebre (Rojo)** vs. **Stock Seguro (Verde)** por prioridad (*CRÍTICA*, *MEDIA*, *NORMAL*) con números flotantes exactos encima de cada barra. **Además, implementamos interactividad de nivel empresarial (Drill-Down)**: el usuario puede pasar el mouse (el cursor cambia a pointer) y **hacer clic en cualquier barra** para abrir automáticamente el modal analítico pre-filtrado mostrando la **lista exacta de los materiales** correspondientes a ese segmento con sus vales, frentes y déficits en tiempo real.
-> 4. **Gráfico 4: Balance Logístico (Circular/Pie):** Compara las transacciones de entrada contra salida. Sus tooltips desglosan el volumen exacto y la participación porcentual de flujo de entrada/salida.
+> Hoy presentamos nuestro proyecto: **Dashboard Inteligente de Control de Inventarios para Constructoras**, una solución diseñada para resolver uno de los mayores problemas operativos del sector construcción: el desabastecimiento de materiales críticos en frentes de obra.
 > 
-> *A continuación, revisaremos cómo automatizamos el despliegue e infraestructura."*
+> Cuando materiales como cemento, acero o tuberías no llegan a tiempo, las obras se detienen, se generan retrasos, sobrecostos y pérdidas económicas importantes para la empresa.
+> 
+> Nuestra propuesta busca transformar el inventario tradicional en un sistema inteligente de datos en tiempo real, capaz de monitorear materiales continuamente, detectar riesgos y apoyar la toma de decisiones.
+> 
+> Desde la perspectiva de experiencia de usuario diseñamos una interfaz moderna basada en **Glassmorphism corporativo de alto contraste y baja fatiga visual**, buscando que el usuario pueda interpretar grandes volúmenes de información de manera rápida y ergonómica.
+> 
+> Entre las principales funcionalidades encontramos:
+> 
+> • Visualización centralizada de inventarios analíticos.
+> • Paneles interactivos para análisis de demanda y consumo logístico.
+> • Monitoreo en tiempo real de movimientos de materiales.
+> • Integración con pasarelas de telemetría IoT para recepción automática de información.
+> • Modal interactivo que permite visualizar materiales críticos con desglose de déficit a nivel de vale.
+> 
+> Con esto buscamos que la plataforma no solo muestre datos, sino que permita actuar rápidamente frente a problemas operativos cotidianos.
+> 
+> Ahora le doy paso a mi compañero para explicar cómo construimos la arquitectura tecnológica que soporta toda esta solución."*
 
 ---
 
-### 👤 INTEGRANTE 4: Ingeniero de DevOps y Cloud Computing
-**Tema: Git Limpio, Contenedorización, Despliegue en Cloud Run e IAM Security**
+### 👤 INTEGRANTE 2 – Arquitecto de Software y Backend
 
-> *"Muchas gracias. Para asegurar que este sistema sea fácilmente escalable, portable y seguro en la nube, implementamos un flujo de trabajo basado en metodologías **DevOps**.*
->
-> **Gestión de Versiones y Git Limpio:**
-> *Inicializamos un repositorio robusto en GitHub. Diseñamos un archivo `.gitignore` estricto para evitar la fuga accidental de credenciales locales (`credentials.json`), variables de configuración sensible (`.env`) o dependencias de librerías locales (`venv/`).*
->
-> **Contenedorización con Docker:**
-> *Escribimos un `Dockerfile` optimizado multicapa. El contenedor empaqueta la app de Flask con todas sus dependencias en un entorno aislado bajo un servidor HTTP para producción (`gunicorn`), garantizando que la aplicación se comporte exactamente igual en local y en la nube.*
->
-> **Despliegue Continuo en Google Cloud Platform (GCP):**
-> *Implementamos una canalización rápida utilizando comandos de Google Cloud SDK:*
-> 1. *Compilamos nuestra imagen de contenedor en la nube de forma segura utilizando **Google Cloud Build**.*
-> 2. *La registramos en **Artifact Registry**.*
-> 3. *Realizamos el despliegue serverless en **Google Cloud Run**.*
->
-> **Configuración de Permisos IAM Seguros en Producción:**
-> *Al desplegar en Cloud Run, resolvemos las conexiones a BigQuery de forma óptima. En lugar de adjuntar archivos JSON de credenciales, le otorgamos a la **Service Account de Compute por defecto** de Cloud Run los roles de **BigQuery Data Editor** y **BigQuery Job User** en la consola IAM de GCP. De esta forma, el contenedor hereda los privilegios dinámicamente y se conecta de manera directa e impenetrable.*
->
-> *Con esto, concluimos nuestra exposición. Hemos entregado una solución integral: interactiva, analítica, altamente resiliente en BigQuery y automatizada en la nube. Quedamos atentos a sus preguntas. Muchas gracias."*
+**Tema: Backend, APIs, BigQuery e ingestión de datos resiliente**
 
+> *"Muchas gracias.
+> 
+> Para soportar esta solución construimos una arquitectura backend utilizando **Python y Flask**, priorizando rendimiento, simplicidad y escalabilidad empresarial.
+> 
+> Nuestra arquitectura se compone principalmente de tres elementos analíticos:
+> 
+> Primero, desarrollamos una **API REST** que funciona como punto central de comunicación segura entre el frontend, la base de datos y las fuentes de telemetría en bodega.
+> 
+> Segundo, utilizamos **Google BigQuery** como motor analítico principal a escala de petabytes, permitiéndonos almacenar e interrogar grandes volúmenes de datos de forma sumamente veloz.
+> 
+> Tercero, implementamos **mecanismos de ingestión resilientes** para garantizar la persistencia de datos bajo cualquier circunstancia.
+> 
+> Nuestro sistema expone tres endpoints principales:
+> • `/api/status` → valida conexiones y el estado del sistema con la nube de Google.
+> • `/api/data` → recibe y consulta los movimientos de inventario en tiempo real.
+> • `/api/stats` → genera agregaciones analíticas instantáneas para alimentar los gráficos.
+> 
+> Para garantizar la confiabilidad de los flujos continuos de datos, implementamos un **esquema híbrido de inserción**:
+> Inicialmente intentamos insertar registros mediante streaming. Si ocurre alguna congestión o falla temporal de red, el sistema activa automáticamente un mecanismo alternativo basado en consultas SQL tradicionales. Esto permite mantener la persistencia y la integridad de los datos de inventario incluso ante escenarios de alta concurrencia de transacciones.
+> 
+> Ahora veremos cómo convertimos estos datos en información útil para el negocio."*
+
+---
+
+### 👤 INTEGRANTE 3 – Analista de Datos y Business Intelligence
+
+**Tema: KPIs, métricas y lectura descriptiva de gráficos para toma de decisiones**
+
+> *"Gracias.
+> 
+> Nuestro enfoque analítico se centró en transformar datos operativos crudos en **indicadores de alto impacto y visualizaciones accionables** para la toma de decisiones logísticas rápidas.
+> 
+> El dashboard calcula y actualiza cuatro métricas clave en tiempo real:
+> • **Total de movimientos logísticos**: para entender la dinámica transaccional global.
+> • **Stock total disponible**: que nos da la suma física absoluta de nuestro inventario en bodega.
+> • **Nivel de servicio de obra**: un indicador vital en porcentaje que mide cuántas transacciones operan de forma segura por encima del inventario mínimo.
+> • **Alertas activas y materiales críticos**: que avisa de inmediato cuántos insumos estratégicos requieren compra urgente.
+> 
+> Pero el verdadero valor analítico está en nuestras cuatro visualizaciones, diseñadas bajo un enfoque descriptivo y funcional:
+> 
+> **1. Salud del Inventario (Gráfico de Dona)**
+> Clasifica nuestros materiales en tres estados de disponibilidad: **Crítico (Agotado)** en rojo, **Riesgo (Bajo Mínimo)** en amarillo y **Saludable** en verde. 
+> *¿Cómo nos ayuda a decidir?* Este gráfico funciona como un termómetro de la cadena de suministro. Si el área roja y amarilla supera el 15%, deducimos de inmediato que tenemos problemas de inestabilidad en las entregas de los proveedores o aceleraciones bruscas de consumo en obra. Esto le advierte al gerente que debe priorizar y acelerar órdenes de compra de inmediato.
+> 
+> **2. Consumo por Frente de Obra (Barras Horizontales)**
+> Muestra las 5 obras o frentes de trabajo con mayor stock en este momento.
+> *¿Cómo nos ayuda a decidir?* Nos permite detectar desequilibrios en la asignación de materiales. Si una sola obra concentra el 70% del inventario general mientras las demás sufren escasez, deducimos un acaparamiento localized e ineficiente. Esto nos permite decidir realizar un **traspaso de materiales inter-obras**, optimizando el capital de trabajo ya invertido sin gastar en compras redundantes.
+> 
+> **3. Alertas vs. Stock Seguro por Prioridad (Barras Agrupadas con Drill-down)**
+> Compara los materiales seguros contra los que están en peligro de agotarse, organizados por prioridad: **CRÍTICA**, **MEDIA** y **NORMAL**.
+> *¿Cómo nos ayuda a decidir?* Mide la efectividad real de nuestra política de abastecimiento. Si vemos alertas rojas muy altas en la categoría **CRÍTICA**, deducimos una falla en el reabastecimiento de insumos estratégicos. La gran ventaja es que incorporamos interactividad **Drill-Down**: al hacer clic en una barra en peligro, el sistema nos abre un modal detallado con la lista exacta de los materiales en quiebra, sus vales, ubicación y el déficit de unidades exacto para reponerlos de inmediato.
+> 
+> **4. Balance Logístico (Gráfico de Pie)**
+> Compara los flujos de Entrada (abastecimientos) contra los flujos de Salida (consumo de las obras).
+> *¿Cómo nos ayuda a decidir?* Mide la velocidad de agotamiento de nuestro almacén central. Si notamos que las Salidas superan de manera persistente a las Entradas, deducimos que consumimos el stock a un ritmo insostenible. Esta alerta temprana nos indica que el almacén se quedará completamente vacío en las próximas semanas si no inyectamos capital de trabajo o reprogramamos compras.
+> 
+> Nuestro objetivo fue convertir información compleja en visualizaciones simples, intuitivas y accionables para que el gerente actúe antes de que la obra se detenga.
+> 
+> Ahora veremos cómo logramos desplegar todo esto en la nube de forma segura y portable."*
+
+---
+
+### 👤 INTEGRANTE 4 – DevOps, Cloud e Infraestructura
+
+**Tema: Git, Docker, Cloud Run y seguridad sin llaves**
+
+> *"Muchas gracias.
+> 
+> Para asegurar que esta solución fuera escalable, altamente portable y segura en la nube implementamos prácticas DevOps modernas de primer nivel.
+> 
+> Primero, utilizamos **Git** para control de versiones, implementando un `.gitignore` estricto que protege el código de fugas accidentales de configuraciones sensibles locales.
+> 
+> Posteriormente dockerizamos toda la aplicación escribiendo un **Dockerfile optimizado**. Esto nos permitió garantizar la consistencia absoluta del entorno de ejecución, asegurando que el sistema funcione exactamente igual tanto en ambientes de desarrollo local como en producción en la nube.
+> 
+> El proceso de despliegue continuo se realizó utilizando **Google Cloud Platform** mediante:
+> • **Cloud Build** para la construcción automatizada de contenedores.
+> • **Artifact Registry** para el almacenamiento de imágenes seguras.
+> • **Cloud Run** para la ejecución serverless del backend.
+> 
+> Cloud Run nos ofrece ventajas operativas gigantescas: escalabilidad automática e instantánea según la demanda, cobro exacto únicamente por tiempo de procesamiento de peticiones, alta disponibilidad en múltiples zonas, y capacidad de escalar hasta cero cuando no existen usuarios conectados, reduciendo los costos operativos a cero.
+> 
+> Finalmente, implementamos un modelo de seguridad altamente robusto basado en **Google Cloud IAM (Identity and Access Management)**. De esta forma, evitamos por completo almacenar claves o archivos JSON físicos de credenciales dentro del contenedor; en su lugar, asignamos permisos dinámicos directos a la Service Account de Cloud Run. El sistema se conecta de forma nativa a BigQuery sin llaves expuestas, garantizando una arquitectura impenetrable.
+> 
+> Con esto logramos construir una solución completa: analítica, escalable, ergonómica, automatizada y lista para operar en tiempo real. Quedamos atentos a sus dudas. ¡Muchas gracias!"*
