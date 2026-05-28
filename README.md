@@ -36,23 +36,58 @@ Este dashboard no es solo un registrador de transacciones; actúa como un **Asis
 
 ## 📈 Análisis Estadístico Avanzado: Enfoque Descriptivo e Inferencial
 
-Para dotar al dashboard de un rigor científico y académico de primer nivel, cada una de las 4 visualizaciones de la plataforma ha sido diseñada bajo un enfoque dual: **Estadística Descriptiva** (para comprender el estado histórico e inmediato) y **Estadística Inferencial** (para deducir riesgos, comportamientos futuros y apoyar la toma de decisiones estocásticas).
+Para dotar al proyecto de un rigor científico y académico de nivel de tesis o auditoría industrial, cada una de las visualizaciones del dashboard ha sido estructurada bajo un enfoque estadístico dual. Pasamos de la mera visualización histórica a la **modelación estocástica**, aplicando ecuaciones y pruebas estadísticas formales para la prevención de riesgos operativos.
+
+---
 
 ### 1. Gráfico de Salud del Inventario (Dona)
-*   **Enfoque Descriptivo:** Categoriza transversalmente el estado de disponibilidad del stock en tres niveles discretos excluyentes: *Crítico (Quiebre)*, *En Riesgo (Bajo el Mínimo)* y *Saludable (Disponible)*. Describe cuantitativamente la distribución de frecuencias relativas (porcentajes %) y las frecuencias absolutas en tiempo real, respondiendo de inmediato a la pregunta: *"¿Cómo está distribuido nuestro almacén hoy?"*
-*   **Enfoque Inferencial:** Permite inferir la **Probabilidad de Quiebre de Stock General ($P(\text{Quiebre})$)** en la cadena de suministro. Si la proporción acumulada de ítems en estado *Crítico* o *En Riesgo* excede el umbral de significancia del $10\%$, se infiere estadísticamente que existe una alta inestabilidad en los tiempos de entrega de los proveedores (Lead Times) o una alta variabilidad de consumo en los frentes de obra. Esto ayuda al analista a inferir la resiliencia operativa y estimar el riesgo de demoras en la entrega física de los proyectos.
+
+*   **Enfoque Descriptivo:** Clasifica transversalmente el stock disponible en tres categorías discretas excluyentes: $C_1 = \text{Crítico (Quiebre)}$, $C_2 = \text{En Riesgo (Bajo el Mínimo)}$ y $C_3 = \text{Saludable (Óptimo)}$. Se calcula la frecuencia absoluta ($f_i$) de ítems en cada estado y sus respectivas proporciones muestrales ($\hat{p}_i = f_i / n$), donde $n$ es el número total de materiales.
+*   **Enfoque Inferencial & Ecuaciones:**
+    *   **Distribución Multinomial de Estados:** Dado que el estado de cada material es categórico y mutuamente excluyente, la probabilidad conjunta de la muestra se modela mediante una función de probabilidad multinomial:
+        $$P(X_1=x_1, X_2=x_2, X_3=x_3) = \frac{n!}{x_1! x_2! x_3!} \prod_{i=1}^3 p_i^{x_i}$$
+        Donde $p_i$ es la probabilidad poblacional teórica de que un ítem caiga en la categoría $i$.
+    *   **Intervalo de Confianza para el Riesgo General ($P(\text{Riesgo})$):** Estimamos la proporción poblacional real de materiales comprometidos ($\hat{p} = \hat{p}_1 + \hat{p}_2$) utilizando un intervalo de confianza binomial de Wald al $95\%$ de nivel de confianza:
+        $$IC_{1-\alpha}(\hat{p}) = \hat{p} \pm z_{\alpha/2} \sqrt{\frac{\hat{p}(1-\hat{p})}{n}}$$
+        Si el límite superior del intervalo excede el umbral de significancia del $15\%$, se infiere con significancia estadística que la cadena de suministro global es inestable debido a la excesiva variabilidad en los tiempos de entrega (*Lead Time*) de proveedores.
+
+---
 
 ### 2. Consumo por Frente de Obra (Barras Horizontales)
-*   **Enfoque Descriptivo:** Muestra y compara la acumulación física de unidades de stock asignadas a los principales proyectos civiles o bodegas periféricas. Ordena de forma descendente los frentes de obra con mayor volumen disponible, resumiendo el estado del inventario distribuido.
-*   **Enfoque Inferencial:** Permite realizar un **Análisis de Varianza de la Demanda entre Proyectos**. Al evaluar la dispersión entre las alturas de las barras, si un único proyecto concentra más del $60\%$ del inventario, se infiere una correlación directa entre el tamaño de la obra y su velocidad de consumo, o bien un acaparamiento ineficiente de materiales (cuello de botella de distribución). Sirve de base para estimar si las diferencias en los niveles de stock entre obras son estadísticamente significativas (ANOVA conceptual) o si corresponden a fluctuaciones normales del azar, ayudando a redistribuir materiales de forma óptima.
+
+*   **Enfoque Descriptivo:** Compara transversalmente la cantidad física total de materiales asignados a cada uno de los $k = 5$ principales frentes de obra. Permite calcular el inventario promedio por frente ($\bar{X}$) y la varianza de existencias inter-bodega ($S^2$) para diagnosticar la dispersión física de recursos.
+*   **Enfoque Inferencial & Ecuaciones:**
+    *   **Prueba de Hipótesis de Análisis de Varianza (ANOVA de una vía):** Evaluamos formalmente si la variación en los niveles medios de inventario entre los distintos frentes de obra se debe a fluctuaciones naturales del azar o a una asignación asimétrica e ineficiente:
+        *   **Hipótesis Nula ($H_0$):** $\mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5$ (Los frentes mantienen un stock medio idéntico y equilibrado).
+        *   **Hipótesis Alternativa ($H_1$):** Al menos un frente de obra tiene un nivel de stock medio estadísticamente diferente (indica acaparamiento o subabastecimiento localizado).
+    *   **Estadístico F de Fisher:**
+        $$F = \frac{\text{Varianza Entre Grupos (MSB)}}{\text{Varianza Dentro de los Grupos (MSW)}} = \frac{\frac{1}{k-1}\sum_{j=1}^k n_j (\bar{X}_j - \bar{X}_g)^2}{\frac{1}{n-k}\sum_{j=1}^k\sum_{i=1}^{n_j} (X_{ij} - \bar{X}_j)^2}$$
+        Si el p-valor de la prueba calculada es menor a $\alpha = 0.05$, se rechaza $H_0$ y se infiere la presencia de cuellos de botella geográficos, obligando a realizar transferencias de materiales inmediatas (*cross-docking*) para reducir los costos de mantenimiento de inventario (*carrying costs*).
+
+---
 
 ### 3. Alertas vs. Stock Seguro por Prioridad (Barras Agrupadas con Conteo & Drill-down)
-*   **Enfoque Descriptivo:** Presenta una clasificación de frecuencia absoluta cruzada. Agrupa side-by-side la cantidad real de materiales que están en estado *Seguro* contra aquellos en *Alerta (Bajo el mínimo)*, segmentándolos por prioridad de abastecimiento (*CRÍTICA*, *MEDIA*, *NORMAL*).
-*   **Enfoque Inferencial:** Representa una **Probabilidad Condicional de Riesgo Operativo** ($P(\text{Alerta} \mid \text{Prioridad})$). Si la tasa de alerta en la prioridad *CRÍTICA* supera en proporción a la de la prioridad *NORMAL*, se infiere una falla estructural en el algoritmo de compras o una alta susceptibilidad al desabastecimiento en insumos estratégicos. Al incorporar interactividad **Drill-down**, el usuario valida de forma empírica la muestra afectada, lo cual permite deducir patrones y correlaciones sobre qué familias de materiales son más propensas a caer bajo el stock de seguridad, permitiendo aplicar modelos predictivos de optimización de inventarios.
+
+*   **Enfoque Descriptivo:** Presenta una tabla de contingencia de dimensión $2 \times 3$ que cruza dos variables cualitativas: *Estado de Stock* (Seguro vs. Alerta) y *Prioridad de Abastecimiento* (CRÍTICA, MEDIA, NORMAL).
+*   **Enfoque Inferencial & Ecuaciones:**
+    *   **Prueba de Independencia de Chi-Cuadrado de Pearson ($\chi^2$):** Probamos si la probabilidad de entrar en alerta de quiebre es estadísticamente independiente del nivel de prioridad del material:
+        *   **Hipótesis Nula ($H_0$):** El estado de stock (Seguro/Alerta) es independiente de la Prioridad del material (CRÍTICA/MEDIA/NORMAL).
+        *   **Hipótesis Alternativa ($H_1$):** Existe una asociación estadística significativa (indica que los materiales más críticos tienen mayor o menor protección de stock).
+    *   **Estadístico de Prueba:**
+        $$\chi^2 = \sum_{i=1}^2 \sum_{j=1}^3 \frac{(O_{ij} - E_{ij})^2}{E_{ij}}$$
+        Donde $O_{ij}$ son las frecuencias observadas en tiempo real y $E_{ij} = \frac{(\text{Total Fila } i) \times (\text{Total Columna } j)}{N}$ son las frecuencias esperadas bajo independencia teórica. Si el estadístico supera el valor crítico ($\chi^2 > \chi^2_{\alpha, (r-1)(c-1)}$), se infiere un fallo grave en las políticas de reorden de compras para materiales estratégicos.
+
+---
 
 ### 4. Balance Logístico de Flujo (Pie)
-*   **Enfoque Descriptivo:** Mide la participación y el volumen físico total de las transacciones acumuladas en el sistema, clasificadas según el flujo logístico: *Entradas* (abastecimientos) y *Salidas* (consumos de obra).
-*   **Enfoque Inferencial:** Representa un análisis de **Tasa de Rotación y Estado Estacionario de la Bodega (Balance de Masas Estocástico)**. Analizando las tasas de entrada ($R_{\text{entrada}}$) y salida ($R_{\text{salida}}$), si la tasa de salida supera significativamente a la de entrada en un periodo continuo, se infiere una **tasa de agotamiento neta** que conducirá matemáticamente a un quiebre de stock en el mediano plazo. Permite proyectar la velocidad de desgaste del inventario y predecir cuándo el almacén requerirá inyección urgente de capital de trabajo mediante análisis inferencial de series temporales.
+
+*   **Enfoque Descriptivo:** Representa la relación porcentual de volumen transaccionado acumulado entre flujos de Entrada (abastecimiento) y Salida (consumo de obra).
+*   **Enfoque Inferencial & Ecuaciones:**
+    *   **Modelado Estocástico de Colas y Balance de Masas (Proceso de Poisson):** La entrada de camiones y la demanda interna de materiales de obra se modelan estadísticamente como procesos estocásticos de Poisson con tasas promedio $\lambda$ (tasa de abastecimiento) y $\mu$ (tasa de consumo por unidad de tiempo $t$):
+        $$P(N(t) = m) = \frac{(\lambda t)^m e^{-\lambda t}}{m!}$$
+    *   **Probabilidad de Agotamiento y Estado Estacionario (Probabilidad de Ruina):** Si la tasa de consumo de las obras es mayor que el flujo de reabastecimiento ($\mu > \lambda$), el factor de utilización $\rho = \mu / \lambda$ es mayor a 1, indicando un sistema inestable. La probabilidad de ruina del almacén (quiebre absoluto) converge matemáticamente a $1.0$ ($100\%$):
+        $$\lim_{t \to \infty} P(\text{Stock}(t) = 0) = 1.0 \quad \text{si} \quad \rho > 1.0$$
+        Esto permite a la gerencia inferir la velocidad de agotamiento de los recursos financieros y calcular el número de días críticos antes de la paralización total de las obras civiles mediante modelos de series temporales.
 
 ---
 
